@@ -1,0 +1,6 @@
+[submodule "extlib/tlx"]
+	path = extlib/tlx
+	url = https://github.com/herlez/tlx
+[submodule "extlib/fmt"]
+	path = extlib/fmt
+	url = https://github.com/fmtlib/fmt
