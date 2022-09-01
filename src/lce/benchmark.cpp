@@ -32,7 +32,7 @@ class benchmark {
 
   bool check_parameters() {
     // Check text path
-    if (!fs::exists(text_path) || fs::file_size(text_path) == 0) {
+    if (!fs::is_regular_file(text_path) || fs::file_size(text_path) == 0) {
       fmt::print("Text file {} is empty or does not exist.\n",
                  text_path.string());
       return false;
@@ -43,14 +43,14 @@ class benchmark {
       queries_path = text_path;
       queries_path.remove_filename();
     }
-    if (!fs::exists(queries_path)) {
+    if (!fs::is_directory(queries_path)) {
       fmt::print("Query directory {} does not exist.\n", queries_path.string());
       return false;
     }
     for (size_t i = lce_from; i < lce_to; ++i) {
       fs::path q_path = queries_path;
       q_path.append(fmt::format("lce_{}", i));
-      if (!fs::exists(q_path)) {
+      if (!fs::is_regular_file(q_path)) {
         fmt::print("Query file {} does not exist.\n", queries_path.string());
         return false;
       }
@@ -90,11 +90,10 @@ class benchmark {
     queries.clear();
     fs::path cur_query_path = queries_path;
     cur_query_path.append(fmt::format("lce_{}", lce_from));
-    std::ifstream stream(cur_query_path);
-    std::string line;
-    while (std::getline(stream, line) && queries.size() < num_lce_queries * 2) {
-      queries.push_back(std::stoll(line));
-    }
+    std::ifstream stream(cur_query_path, std::ios::in | std::ios::binary);
+
+    queries.resize(fs::file_size(cur_query_path) / sizeof(size_t));
+    stream.read((char*)queries.data(), fs::file_size(cur_query_path));
 
     // Now clone queries until there are num_unique_queries many
     if (queries.size() != 0) {
@@ -122,7 +121,7 @@ class benchmark {
       for (size_t i = 0; i < queries.size(); i += 2) {
         check_sum += lce_ds.lce(queries[i], queries[i + 1]);
       }
-    } //else if (algorithm == ) {}
+    }  // else if (algorithm == ) {}
     fmt::print(" q_time={}", t.get());
     fmt::print(" check_sum={}", check_sum);
   }

@@ -192,7 +192,7 @@ int main(int argc, char** argv) {
     for(size_t x = 0; x <= max_lcp_exp; x++) {
       auto outfile = std::filesystem::path(options.out_dir) /
                      ("lce_" + std::to_string(x));
-      out[x] = std::ofstream(outfile);
+      out[x] = std::ofstream(outfile, std::ios::binary);
       count[x] = 0;
     }
   }
@@ -228,8 +228,10 @@ int main(int argc, char** argv) {
       ++count[x];
 
       // write query to file
-      out[x] << sa_prev << "\n";
-      out[x] << sa_i << "\n";
+      out[x].write((char*)&sa_prev, sizeof(sa_prev));
+      out[x].write((char*)&sa_i, sizeof(sa_prev));
+      //out[x] << sa_prev << "\n";
+      //out[x] << sa_i << "\n";
     }
 
     // keep SA entry
