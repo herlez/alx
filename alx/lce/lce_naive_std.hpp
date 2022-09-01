@@ -40,7 +40,7 @@ class lce_naive_std {
 
   // Returns the number of common letters in text[i..] and text[j..].
   // Here l must be smaller than r.
-  size_t lce_lr(size_t l, size_t r) {
+  size_t lce_lr(size_t l, size_t r) const {
     return lce_lr(m_text, m_size, l, r);
   }
 
