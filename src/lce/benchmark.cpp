@@ -9,9 +9,12 @@
 #include "lce/lce_naive.hpp"
 #include "util/io.hpp"
 #include "util/timer.hpp"
+#include <malloc_count/malloc_count.h>
 
 //#include "lce/lce_naive_block.hpp"
 //#include "lce/lce_naive_std.hpp"
+
+#define ALX_MEASURE_SPACE
 
 namespace fs = std::filesystem;
 
@@ -77,9 +80,13 @@ class benchmark {
 
   template <typename lce_ds_type>
   lce_ds_type benchmark_construction() {
+    malloc_count_reset_peak();
+    size_t mem_before = malloc_count_current();
     alx::util::timer t;
     lce_ds_type lce_ds(text);
     fmt::print(" c_time={}", t.get());
+    fmt::print(" c_mem={}", malloc_count_current() - mem_before);
+    fmt::print(" c_mempeak={}", malloc_count_peak() - mem_before);
 
     return lce_ds;
   }
