@@ -1,3 +1,12 @@
+/*******************************************************************************
+ * alx/lce/lce_naive_block.hpp
+ *
+ * Copyright (C) 2022 Alexander Herlez <alexander.herlez@tu-dortmund.de>
+ *
+ * All rights reserved. Published under the BSD-2 license in the LICENSE file.
+ ******************************************************************************/
+
+#pragma once
 
 namespace alx::lce {
 
@@ -10,8 +19,7 @@ class lce_naive_block {
   lce_naive_block() : m_text(nullptr), m_size(0) {
   }
 
-  lce_naive_block(char_type* text, size_t size)
-      : m_text(text), m_size(size) {
+  lce_naive_block(char_type* text, size_t size) : m_text(text), m_size(size) {
   }
 
   size_t lce(size_t i, size_t j) {
@@ -39,14 +47,12 @@ class lce_naive_block {
     return {true, 0};
   }
 
-  static std::pair<bool, size_t> is_smaller_suffix(char_type* text,
-                                                   size_t size, size_t i,
-                                                   size_t j) {
+  static std::pair<bool, size_t> is_smaller_suffix(char_type* text, size_t size,
+                                                   size_t i, size_t j) {
     return {true, 0};
   }
 
-  static size_t lce_up_to(char_type* text, size_t size, size_t i,
-                          size_t j) {
+  static size_t lce_up_to(char_type* text, size_t size, size_t i, size_t j) {
     return 0;
   }
 };

@@ -1,28 +1,40 @@
+/*******************************************************************************
+ * alx/util/io.hpp
+ *
+ * Copyright (C) 2019 Florian Kurpicz <florian.kurpicz@tu-dortmund.de>
+ * Copyright (C) 2022 Alexander Herlez <alexander.herlez@tu-dortmund.de>
+ *
+ * All rights reserved. Published under the BSD-2 license in the LICENSE file.
+ ******************************************************************************/
+
+#pragma once
+#include <fmt/core.h>
 
 #include <filesystem>
-#include <iostream>
 #include <fstream>
+#include <iostream>
 
 namespace alx::util {
 namespace fs = std::filesystem;
 
-std::vector<uint8_t> load_text(fs::path file_path, size_t const prefix_size = 0) {
-  std::ifstream stream(file_path.c_str(), std::ios::in | std::ios::binary);
-  if (!stream) {
-    std::cerr << "File " << file_path << " not found" << std::endl;
-    std::exit(-1);
+template <typename t_char_type>
+std::vector<t_char_type> load_vector(
+    fs::path file_path,
+    size_t prefix_size = std::numeric_limits<size_t>::max()) {
+  if (!fs::is_regular_file(file_path)) {
+    fmt::print("Text file {} does not exist.\n", file_path.string());
+    return std::vector<t_char_type>();
   }
 
-  std::filesystem::path p(file_path);
+  prefix_size =
+      std::min(prefix_size, fs::file_size(file_path) / sizeof(t_char_type));
+  size_t bytes_to_read = prefix_size * sizeof(t_char_type);
 
-  uint64_t file_size = std::filesystem::file_size(p);
-  if (prefix_size > 0) {
-    file_size = std::min(prefix_size, file_size);
-  }
-  stream.seekg(0);
-  std::vector<uint8_t> result(file_size);
-  stream.read(reinterpret_cast<char*>(result.data()), file_size);
-  stream.close();
-  return result;
+  std::vector<t_char_type> vec(prefix_size);
+
+  std::ifstream stream(file_path, std::ios::in | std::ios::binary);
+  stream.read((char*)vec.data(), bytes_to_read);
+  return vec;
 }
-}  // namespace alx::io
+
+}  // namespace alx::util

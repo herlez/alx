@@ -1,5 +1,5 @@
 /*******************************************************************************
- * util/timer.hpp<include>
+ * alx/util/timer.hpp
  *
  * Copyright (C) 2019 Florian Kurpicz <florian.kurpicz@tu-dortmund.de>
  *

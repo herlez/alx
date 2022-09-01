@@ -1,5 +1,18 @@
+/*******************************************************************************
+ * src/lce/benchmark.cpp
+ *
+ * Copyright (C) 2022 Alexander Herlez <alexander.herlez@tu-dortmund.de>
+ *
+ * All rights reserved. Published under the BSD-2 license in the LICENSE file.
+ ******************************************************************************/
+
+#define ALX_MEASURE_SPACE
+
 #include <fmt/core.h>
 #include <fmt/ranges.h>
+#ifdef ALX_MEASURE_SPACE
+#include <malloc_count/malloc_count.h>
+#endif
 
 #include <filesystem>
 #include <iostream>
@@ -9,12 +22,9 @@
 #include "lce/lce_naive.hpp"
 #include "util/io.hpp"
 #include "util/timer.hpp"
-#include <malloc_count/malloc_count.h>
 
 //#include "lce/lce_naive_block.hpp"
 //#include "lce/lce_naive_std.hpp"
-
-#define ALX_MEASURE_SPACE
 
 namespace fs = std::filesystem;
 
@@ -71,7 +81,7 @@ class benchmark {
 
   void load_text() {
     alx::util::timer t;
-    text = alx::util::load_text(text_path);
+    text = alx::util::load_vector<uint8_t>(text_path);
     assert(text.size() != 0);
     fmt::print(" text={}", text_path.filename().string());
     fmt::print(" text_size={}", text.size());
@@ -80,27 +90,26 @@ class benchmark {
 
   template <typename lce_ds_type>
   lce_ds_type benchmark_construction() {
+#ifdef ALX_MEASURE_SPACE
     malloc_count_reset_peak();
     size_t mem_before = malloc_count_current();
+#endif
     alx::util::timer t;
     lce_ds_type lce_ds(text);
     fmt::print(" c_time={}", t.get());
+#ifdef ALX_MEASURE_SPACE
     fmt::print(" c_mem={}", malloc_count_current() - mem_before);
     fmt::print(" c_mempeak={}", malloc_count_peak() - mem_before);
-
+#endif
     return lce_ds;
   }
 
   void load_queries() {
     alx::util::timer t;
     // First load queries from file
-    queries.clear();
     fs::path cur_query_path = queries_path;
     cur_query_path.append(fmt::format("lce_{}", lce_from));
-    std::ifstream stream(cur_query_path, std::ios::in | std::ios::binary);
-
-    queries.resize(fs::file_size(cur_query_path) / sizeof(size_t));
-    stream.read((char*)queries.data(), fs::file_size(cur_query_path));
+    queries = alx::util::load_vector<size_t>(cur_query_path);
 
     // Now clone queries until there are num_unique_queries many
     if (queries.size() != 0) {
