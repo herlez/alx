@@ -82,3 +82,29 @@ TEST(LceNaive, All) {
   test_simple<alx::lce::lce_naive<__uint128_t>>();
   test_variants<alx::lce::lce_naive<__uint128_t>>();
 }
+
+TEST(LceNaiveStd, All) {
+  test_empty_constructor<alx::lce::lce_naive_std<unsigned char>>();
+  test_simple<alx::lce::lce_naive_std<unsigned char>>();
+  test_simple<alx::lce::lce_naive_std<char>>();
+  test_simple<alx::lce::lce_naive_std<uint8_t>>();
+  test_simple<alx::lce::lce_naive_std<uint32_t>>();
+  test_simple<alx::lce::lce_naive_std<int32_t>>();
+  test_simple<alx::lce::lce_naive_std<uint64_t>>();
+  test_simple<alx::lce::lce_naive_std<int64_t>>();
+  test_simple<alx::lce::lce_naive_std<__uint128_t>>();
+  test_variants<alx::lce::lce_naive_std<__uint128_t>>();
+}
+
+TEST(LceNaiveBlock, All) {
+  test_empty_constructor<alx::lce::lce_naive_std<unsigned char>>();
+  test_simple<alx::lce::lce_naive_block<unsigned char>>();
+  test_simple<alx::lce::lce_naive_block<char>>();
+  test_simple<alx::lce::lce_naive_block<uint8_t>>();
+  test_simple<alx::lce::lce_naive_block<uint32_t>>();
+  test_simple<alx::lce::lce_naive_block<int32_t>>();
+  test_simple<alx::lce::lce_naive_block<uint64_t>>();
+  test_simple<alx::lce::lce_naive_block<int64_t>>();
+  test_simple<alx::lce::lce_naive_block<__uint128_t>>();
+  test_variants<alx::lce::lce_naive_block<__uint128_t>>();
+}

@@ -16,19 +16,19 @@
 
 #include <filesystem>
 #include <iostream>
+#include <string>
 #include <tlx/cmdline_parser.hpp>
 #include <vector>
 
 #include "lce/lce_naive.hpp"
+#include "lce/lce_naive_std.hpp"
 #include "util/io.hpp"
 #include "util/timer.hpp"
-
-//#include "lce/lce_naive_block.hpp"
-//#include "lce/lce_naive_std.hpp"
+#include "lce/lce_naive_block.hpp"
 
 namespace fs = std::filesystem;
 
-std::vector<std::string> algorithms{"naive"};
+std::vector<std::string> algorithms{"naive", "naive_std", "naive_block"};
 
 class benchmark {
  public:
@@ -133,17 +133,21 @@ class benchmark {
     }
     size_t check_sum = 0;
     alx::util::timer t;
-    if (algorithm == "naive") {
-      for (size_t i = 0; i < queries.size(); i += 2) {
-        check_sum += lce_ds.lce(queries[i], queries[i + 1]);
-      }
-    }  // else if (algorithm == ) {}
+    for (size_t i = 0; i < queries.size(); i += 2) {
+      check_sum += lce_ds.lce(queries[i], queries[i + 1]);
+    }
+
     fmt::print(" q_time={}", t.get());
     fmt::print(" check_sum={}", check_sum);
   }
 
   template <typename lce_ds_type>
-  void run() {
+  void run(std::string const& algo_name) {
+    assert(std::find(algorithms.begin(), algorithms.end(), algo_name) !=
+           algorithms.end());
+    if (algo_name != algorithm) {
+      return;
+    }
     lce_ds_type lce_ds;
     if (!check_parameters()) {
       return;
@@ -201,6 +205,9 @@ int main(int argc, char** argv) {
   if (!cp.process(argc, argv)) {
     std::exit(EXIT_FAILURE);
   }
+  b.check_parameters();
 
-  b.run<alx::lce::lce_naive<>>();
+  b.run<alx::lce::lce_naive<>>("naive");
+  b.run<alx::lce::lce_naive_std<>>("naive_std");
+  b.run<alx::lce::lce_naive_block<>>("naive_block");
 }

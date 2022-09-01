@@ -31,6 +31,12 @@ class lce_naive {
     return lce(m_text, m_size, i, j);
   }
 
+  // Returns the number of common letters in text[i..] and text[j..]. Here i and
+  // j must be different.
+  size_t lce_uneq(size_t i, size_t j) const {
+    return lce_uneq(m_text, m_size, i, j);
+  }
+
   // Returns the number of common letters in text[i..] and text[j..].
   // Here l must be smaller than r.
   size_t lce_lr(size_t l, size_t r) {
@@ -61,6 +67,12 @@ class lce_naive {
       assert(i < size);
       return size - i;
     }
+    return lce_uneq(text, size, i, j);
+  }
+
+  // Returns the number of common letters in text[i..] and text[j..].
+  static size_t lce_uneq(char_type* text, size_t size, size_t i, size_t j) {
+    assert(i != j);
 
     size_t l = std::min(i, j);
     size_t r = std::max(i, j);
@@ -91,11 +103,7 @@ class lce_naive {
     size_t l = std::min(i, j);
     size_t r = std::max(i, j);
 
-    assert(l < r);
-    size_t lce = 0;
-    while (r + lce < size && text[l + lce] == text[r + lce]) {
-      ++lce;
-    }
+    size_t lce = lce_lr(text, size, l, r);
     return {r + lce != size, lce};
   }
 
@@ -103,8 +111,7 @@ class lce_naive {
   // and j must be different.
   static bool is_leq_suffix(char_type* text, size_t size, size_t i, size_t j) {
     assert(i != j);
-
-    size_t lce_val = lce(text, size, i, j);
+    size_t lce_val = lce_uneq(text, size, i, j);
     return (i + lce_val == size || text[i + lce_val] < text[j + lce_val]);
   }
 
@@ -121,10 +128,7 @@ class lce_naive {
     size_t r = std::max(i, j);
 
     size_t lce_max = std::min(r + up_to, size) - r;
-    size_t lce = 0;
-    while (lce < lce_max && text[l + lce] == text[r + lce]) {
-      ++lce;
-    }
+    size_t lce = lce_lr(text, r+lce_max, l, r);
     return {lce < lce_max, lce};
   }
 
