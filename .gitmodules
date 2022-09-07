@@ -7,3 +7,6 @@
 [submodule "extlib/malloc_count"]
 	path = extlib/malloc_count
 	url = https://github.com/bingmann/malloc_count.git
+[submodule "extlib/modular_arithmetic"]
+	path = extlib/modular_arithmetic
+	url = https://github.com/hurchalla/modular_arithmetic

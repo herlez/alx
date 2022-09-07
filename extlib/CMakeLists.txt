@@ -6,3 +6,7 @@ add_subdirectory(fmt)
 add_library(malloc_count malloc_count/malloc_count.c)
 target_include_directories(malloc_count PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(malloc_count ${CMAKE_DL_LIBS})
+
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/modular_arithmetic)
+#add_library(hurchalla_modular_arithmetic hurchalla_modular_arithmetic)
+

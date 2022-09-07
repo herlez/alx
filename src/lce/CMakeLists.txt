@@ -1,5 +1,5 @@
 add_executable(benchmark benchmark.cpp)
-target_link_libraries(benchmark PRIVATE alx tlx_clp fmt::fmt-header-only)
+target_link_libraries(benchmark PRIVATE alx_lce tlx_clp fmt::fmt-header-only)
 
 #if(TRUE)
 target_link_libraries(benchmark PRIVATE malloc_count)
