@@ -14,7 +14,8 @@ target_link_libraries(alx_lce INTERFACE alx_lce_std)
 
 add_library(alx_lce_fp INTERFACE)
 target_include_directories(alx_lce_fp INTERFACE ${ALX_INCLUDE_DIR})
-target_link_libraries(alx_lce INTERFACE alx_lce_std alx_rolling_hash)
+target_link_libraries(alx_lce_fp INTERFACE alx_rolling_hash)
+target_link_libraries(alx_lce INTERFACE alx_lce_fp)
 
 
 

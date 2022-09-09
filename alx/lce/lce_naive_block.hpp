@@ -9,6 +9,8 @@
 #pragma once
 #include <assert.h>
 
+#include <cstdint>
+
 namespace alx::lce {
 
 template <typename t_char_type = uint8_t>

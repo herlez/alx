@@ -26,7 +26,7 @@ class rk_prime {
       : m_tau(tau),
         m_window_start(window_start),
         m_window_end(window_start + tau),
-        m_cur_fp(0) {
+        m_fp(0) {
     if (base == 0) {
       uint64_t max =
           (t_prime_exp > 64)
@@ -49,29 +49,34 @@ class rk_prime {
 
   // Roll the window by one position.
   inline uint128_t roll() {
-    m_cur_fp *= m_base;
+    m_fp *= m_base;
     uint128_t border_char_influence =
         m_char_influence[(unsigned char)(*m_window_start)]
                         [(unsigned char)(*m_window_end)];
-    m_cur_fp = alx::mersenne::add_mod<uint128_t, m_prime>(
-        m_cur_fp, border_char_influence);
+    m_fp = alx::mersenne::add_mod<uint128_t, m_prime>(
+        m_fp, border_char_influence);
     std::advance(m_window_start, 1);
     std::advance(m_window_end, 1);
-    return m_cur_fp;
+    return m_fp;
   }
 
   // Roll the window by specifying the character that is rolled out of the
   // window and the character that is rolled in the window.
   inline uint128_t roll(unsigned char out, unsigned in) {
-    m_cur_fp *= m_base;
-    m_cur_fp = mersenne::add_mod<uint128_t, m_prime>(m_cur_fp,
+    m_fp *= m_base;
+    m_fp = mersenne::add_mod<uint128_t, m_prime>(m_fp,
                                                      m_char_influence[out][in]);
-    return m_cur_fp;
+    return m_fp;
+  }
+
+  // Return the prime number used for the rolling hash function.
+  inline uint128_t get_prime() const {
+    return m_prime;
   }
 
   // Return the fingerprint of the current window.
-  inline uint128_t get_current_fp() const {
-    return m_cur_fp;
+  inline uint128_t get_fp() const {
+    return m_fp;
   }
 
   // Return the base of rolling hash function.
@@ -84,7 +89,7 @@ class rk_prime {
   uint128_t m_tau;
   t_it m_window_start;
   t_it m_window_end;
-  uint128_t m_cur_fp;
+  uint128_t m_fp;
 
   uint128_t m_base;
   uint128_t m_char_influence[256][256];

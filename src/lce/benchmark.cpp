@@ -20,15 +20,16 @@
 #include <tlx/cmdline_parser.hpp>
 #include <vector>
 
+#include "lce/lce_fp.hpp"
 #include "lce/lce_naive.hpp"
+#include "lce/lce_naive_block.hpp"
 #include "lce/lce_naive_std.hpp"
 #include "util/io.hpp"
 #include "util/timer.hpp"
-#include "lce/lce_naive_block.hpp"
 
 namespace fs = std::filesystem;
 
-std::vector<std::string> algorithms{"naive", "naive_std", "naive_block"};
+std::vector<std::string> algorithms{"naive", "naive_std", "naive_block", "fp"};
 
 class benchmark {
  public:
@@ -210,4 +211,5 @@ int main(int argc, char** argv) {
   b.run<alx::lce::lce_naive<>>("naive");
   b.run<alx::lce::lce_naive_std<>>("naive_std");
   b.run<alx::lce::lce_naive_block<>>("naive_block");
+  b.run<alx::lce::lce_fp<>>("fp");
 }

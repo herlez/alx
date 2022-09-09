@@ -9,6 +9,7 @@
 #pragma once
 #include <assert.h>
 #include <hurchalla/modular_arithmetic/modular_pow.h>
+#include <hurchalla/modular_arithmetic/modular_multiplication.h>
 
 #include <bit>
 #include <iterator>
@@ -20,6 +21,12 @@ namespace alx::modular {
 template <typename T>
 inline T pow_mod(T base, T exp, T prime) {
   return hurchalla::modular_pow(base, exp, prime);
+}
+
+// Return base^exp % prime.
+template <typename T>
+inline T mult_mod(T a, T b, T prime) {
+  return hurchalla::modular_multiplication_prereduced_inputs(a, b, prime);
 }
 
 }  // namespace alx::modular

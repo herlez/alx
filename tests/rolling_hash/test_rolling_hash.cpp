@@ -131,6 +131,6 @@ TEST(RollingHash, Roll) {
   // check fp
   alx::rolling_hash::rk_prime rolling_hasher_end(text.end() - 16, 16, 123123);
 
-  EXPECT_EQ(rolling_hasher.get_current_fp(),
-            rolling_hasher_end.get_current_fp());
+  EXPECT_EQ(rolling_hasher.get_fp(),
+            rolling_hasher_end.get_fp());
 }

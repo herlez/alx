@@ -9,6 +9,8 @@
 #pragma once
 #include <assert.h>
 
+#include <cstdint>
+
 namespace alx::lce {
 
 template <typename t_char_type = uint8_t>
@@ -130,7 +132,7 @@ class lce_naive_std {
     size_t r = std::max(i, j);
 
     size_t lce_max = std::min(r + up_to, size) - r;
-    size_t lce = lce_lr(text, r+lce_max, l, r);
+    size_t lce = lce_lr(text, r + lce_max, l, r);
     return {lce < lce_max, lce};
   }
 
