@@ -53,8 +53,7 @@ class rk_prime {
     uint128_t border_char_influence =
         m_char_influence[(unsigned char)(*m_window_start)]
                         [(unsigned char)(*m_window_end)];
-    m_fp = alx::mersenne::add_mod<uint128_t, m_prime>(
-        m_fp, border_char_influence);
+    m_fp = alx::mersenne::mod<uint128_t, m_prime>(m_fp + border_char_influence);
     std::advance(m_window_start, 1);
     std::advance(m_window_end, 1);
     return m_fp;
@@ -64,8 +63,7 @@ class rk_prime {
   // window and the character that is rolled in the window.
   inline uint128_t roll(unsigned char out, unsigned in) {
     m_fp *= m_base;
-    m_fp = mersenne::add_mod<uint128_t, m_prime>(m_fp,
-                                                     m_char_influence[out][in]);
+    m_fp = mersenne::mod<uint128_t, m_prime>(m_fp + m_char_influence[out][in]);
     return m_fp;
   }
 

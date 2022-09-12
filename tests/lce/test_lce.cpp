@@ -29,6 +29,7 @@ void test_simple() {
             std::numeric_limits<char_typee>::max() / 2);
   std::iota(text.begin()+1000, text.end(),
             std::numeric_limits<char_typee>::max() / 2);
+  std::vector<char_typee> text_copy = text;
   // Test pointer constructor
   {
     lce_ds_type ds(text.data(), text.size());
@@ -36,6 +37,7 @@ void test_simple() {
     EXPECT_EQ(ds.lce(0, 1000), 1000);
     EXPECT_EQ(ds.lce(500, 1000), 0);
   }
+  text = text_copy;
 
   // Test container constructor
   {
@@ -44,6 +46,7 @@ void test_simple() {
     EXPECT_EQ(ds.lce(0, 1000), 1000);
     EXPECT_EQ(ds.lce(500, 1000), 0);
   }
+  text = text_copy;
 }
 
 template <typename lce_ds_type>
@@ -70,6 +73,28 @@ void test_variants() {
   //EXPECT_EQ(ds.lce_up_to(1000, 0, 200), std::make_pair(false, size_t{200}));
   //EXPECT_EQ(ds.lce_up_to(1000, 500, 200), std::make_pair(true, size_t{0}));
 }
+
+template <typename lce_ds_type>
+void test_retransform() {
+  typedef typename lce_ds_type::char_type char_typee;
+  std::vector<char_typee> text(2000);
+  std::iota(text.begin(), text.begin()+1000,
+            std::numeric_limits<char_typee>::max() / 2);
+  std::iota(text.begin()+1000, text.end(),
+            std::numeric_limits<char_typee>::max() / 2);
+
+  std::vector<char_typee> text_copy = text;
+  lce_ds_type ds(text);
+
+  for(size_t i = 0; i < text.size(); ++i) {
+    ASSERT_EQ(ds[i], text_copy[i]) << i;
+  }
+  ds.retransform_text();
+  for(size_t i = 0; i < text.size(); ++i) {
+    ASSERT_EQ(text[i], text_copy[i]) << i;
+  }
+}
+
 
 TEST(LceNaive, All) {
   test_empty_constructor<alx::lce::lce_naive<unsigned char>>();
@@ -112,13 +137,8 @@ TEST(LceNaiveBlock, All) {
 
 TEST(LceFP, All) {
   test_empty_constructor<alx::lce::lce_naive_std<unsigned char>>();
+  test_retransform<alx::lce::lce_fp<unsigned char>>();
   test_simple<alx::lce::lce_fp<unsigned char>>();
   test_simple<alx::lce::lce_fp<char>>();
   test_simple<alx::lce::lce_fp<uint8_t>>();
-  test_simple<alx::lce::lce_fp<uint32_t>>();
-  test_simple<alx::lce::lce_fp<int32_t>>();
-  test_simple<alx::lce::lce_fp<uint64_t>>();
-  test_simple<alx::lce::lce_fp<int64_t>>();
-  test_simple<alx::lce::lce_fp<__uint128_t>>();
-  test_variants<alx::lce::lce_fp<__uint128_t>>();
 }

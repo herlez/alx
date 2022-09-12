@@ -17,21 +17,22 @@
 
 namespace alx::lce {
 
-template <typename t_char_type = uint8_t>
+template <typename t_char_type = uint8_t, size_t t_naive_scan = 128>
 class lce_fp {
  public:
   typedef t_char_type char_type;
   __extension__ typedef unsigned __int128 uint128_t;
 
-  lce_fp() : m_block_fps(nullptr), m_size(0) {
+  lce_fp() : m_block_fps(nullptr), m_size(0), m_size_in_blocks(0) {
   }
 
   lce_fp(char_type* text, size_t size)
-      : m_block_fps(reinterpret_cast<uint64_t*>(text)), m_size(size) {
+      : m_block_fps(reinterpret_cast<uint64_t*>(text)),
+        m_size(size),
+        m_size_in_blocks(1 + (size - 1) / 8) {
     // Partition text for threads in superblocks.
-    size_t num_blocks = size / 64 + (size % 64 > 0);
     size_t begin = 0;
-    size_t end = num_blocks;
+    size_t end = m_size_in_blocks;
     int t = 0;
     int nt = 1;
 
@@ -65,7 +66,7 @@ class lce_fp {
           modular::pow_mod(uint128_t{1} << 64, uint128_t{end - begin}, m_prime);
       for (size_t i = 1; i < superblock_fps.size(); ++i) {
         uint128_t last_block_influence =
-            shift_influence * superblock_fps[i - 1] % m_prime;
+            shift_influence * superblock_fps[i - 1];
         uint128_t cur_block_influence = superblock_fps[i];
         superblock_fps[i] =
             last_block_influence + cur_block_influence % m_prime;
@@ -75,7 +76,7 @@ class lce_fp {
     // Synchronize
     // Overwrite text with fingerprints
     {
-      uint128_t fingerprint = 0;
+      uint128_t fingerprint = superblock_fps[t];
       for (size_t i = begin; i < end; ++i) {
         uint128_t current_block = m_block_fps[i];
         fingerprint <<= 64;
@@ -92,8 +93,19 @@ class lce_fp {
   lce_fp(C& container) : lce_fp(container.data(), container.size()) {
   }
 
-  char_type access(size_t pos) const {
-    return 0;  // todo
+  void retransform_text() {
+    for (size_t i{(m_size / 8) - 1}; i > 0; --i) {
+      m_block_fps[i] = get_block_not_first(i);
+      m_block_fps[i] = __builtin_bswap64(m_block_fps[i]);
+    }
+    m_block_fps[0] &= 0x7FFFFFFFFFFFFFFFULL;
+    m_block_fps[0] = __builtin_bswap64(m_block_fps[0]);
+  }
+
+  char_type operator[](size_t pos) const {
+    uint64_t block_number = pos / 8;
+    uint64_t offset = 7 - (pos % 8);
+    return (get_block(block_number)) >> (8 * offset) & 0xff;
   }
 
   // Returns the number of common letters in text[i..] and text[j..].
@@ -119,7 +131,39 @@ class lce_fp {
   // Returns the number of common letters in text[i..] and text[j..].
   // Here l must be smaller than r.
   size_t lce_lr(size_t l, size_t r) const {
-    return 0;
+    uint64_t max_lce = m_size - r;
+    uint64_t lce = lce_scan(l, r, max_lce);
+    if (lce < t_naive_scan) {
+      return lce;
+    }
+    // Exponential search
+    uint64_t dist = t_naive_scan * 2;
+    int exp = std::countr_zero(dist);
+
+    const uint128_t fingerprint_to_l = (l != 0) ? fp_to(l - 1) : 0;
+    const uint128_t fingerprint_to_r = (r != 0) ? fp_to(r - 1) : 0;
+
+    while (dist <= max_lce && fp_exp(fingerprint_to_l, l, exp) ==
+                                  fp_exp(fingerprint_to_r, r, exp)) {
+      ++exp;
+      dist *= 2;
+    }
+
+    // Binary search. We start it at i2 and j2, because we know that up until
+    // i2 and j2 everything matched.
+    --exp;
+    dist /= 2;
+    uint64_t add = dist;
+
+    while (dist > t_naive_scan) {
+      --exp;
+      dist /= 2;
+      if (fp_exp(l + add, exp) == fp_exp(r + add, exp)) {
+        add += dist;
+      }
+    }
+    max_lce -= add;
+    return add + lce_scan_to_end(l + add, r + add, max_lce);
   }
 
   // Returns {b, lce}, where lce is the number of common letters in text[i..]
@@ -142,7 +186,90 @@ class lce_fp {
   bool is_leq_suffix(size_t i, size_t j) const {
     assert(i != j);
     size_t lce_val = lce_uneq(i, j);
-    return (i + lce_val == m_size || access(i + lce_val) < access(j + lce_val));
+    return (i + lce_val == m_size || operator[](i + lce_val) < operator[](j + lce_val));
+  }
+
+  // Alternative: Calculate influence, and compare fp - influence until mismatch
+  uint64_t lce_scan(const uint64_t i, const uint64_t j,
+                    uint64_t max_lce) const {
+    uint64_t lce = 0;
+    // Naive part of lce query. Compare blockwise.
+    const int offset_lce1 = (i % 8) * 8;
+    const int offset_lce2 = (j % 8) * 8;
+    uint64_t block_i = get_block(i / 8);
+    uint64_t block_i2 = get_block_not_first(i / 8 + 1);
+    uint64_t block_j = get_block(j / 8);
+    uint64_t block_j2 = get_block_not_first(j / 8 + 1);
+    uint64_t comp_block_i =
+        (block_i << offset_lce1) + ((block_i2 >> 1) >> (63 - offset_lce1));
+    uint64_t comp_block_j =
+        (block_j << offset_lce2) + ((block_j2 >> 1) >> (63 - offset_lce2));
+
+    const uint64_t max_block_naive =
+        max_lce < t_naive_scan ? max_lce / 8 : t_naive_scan / 8;
+    while (lce < max_block_naive) {
+      if (comp_block_i != comp_block_j) {
+        break;
+      }
+      ++lce;
+      block_i = block_i2;
+      block_i2 = get_block_not_first((i / 8) + lce + 1);
+      block_j = block_j2;
+      block_j2 = get_block_not_first((j / 8) + lce + 1);
+      comp_block_i =
+          (block_i << offset_lce1) + ((block_i2 >> 1) >> (63 - offset_lce1));
+      comp_block_j =
+          (block_j << offset_lce2) + ((block_j2 >> 1) >> (63 - offset_lce2));
+    }
+    lce *= 8;
+    // If everything except the stub matches, we compare the stub character-wise
+    // and return the result
+    if (lce != t_naive_scan) {
+      uint64_t max_stub = std::min((max_lce - lce), uint64_t{8});
+      return lce + std::min<uint64_t>(
+                       ((std::countl_zero(comp_block_i ^ comp_block_j)) / 8),
+                       max_stub);
+    }
+    return t_naive_scan;
+  }
+
+  uint64_t lce_scan_to_end(const uint64_t i, const uint64_t j,
+                           uint64_t max_lce) const {
+    uint64_t lce = 0;
+    // Naive part of lce query. Compare blockwise.
+    const int offset_lce1 = (i % 8) * 8;
+    const int offset_lce2 = (j % 8) * 8;
+    uint64_t block_i = get_block(i / 8);
+    uint64_t block_i2 = get_block_not_first(i / 8 + 1);
+    uint64_t block_j = get_block(j / 8);
+    uint64_t block_j2 = get_block_not_first(j / 8 + 1);
+    uint64_t comp_block_i =
+        (block_i << offset_lce1) + ((block_i2 >> 1) >> (63 - offset_lce1));
+    uint64_t comp_block_j =
+        (block_j << offset_lce2) + ((block_j2 >> 1) >> (63 - offset_lce2));
+
+    while (lce < max_lce) {
+      if (comp_block_i != comp_block_j) {
+        break;
+      }
+      ++lce;
+      block_i = block_i2;
+      block_i2 = get_block_not_first((i / 8) + lce + 1);
+      block_j = block_j2;
+      block_j2 = get_block_not_first((j / 8) + lce + 1);
+      comp_block_i =
+          (block_i << offset_lce1) + ((block_i2 >> 1) >> (63 - offset_lce1));
+      comp_block_j =
+          (block_j << offset_lce2) + ((block_j2 >> 1) >> (63 - offset_lce2));
+    }
+    lce *= 8;
+    // If everything except the stub matches, we compare the stub character-wise
+    // and return the result.
+
+    uint64_t max_stub = std::min((max_lce - lce), uint64_t{8});
+    return lce +
+           std::min<uint64_t>(
+               ((std::countl_zero(comp_block_i ^ comp_block_j)) / 8), max_stub);
   }
 
   // Returns {b, lce}, where lce is the lce of text[i..i+lce) and text[j..j+lce]
@@ -164,6 +291,112 @@ class lce_fp {
  private:
   uint64_t* m_block_fps;
   size_t m_size;
+  size_t m_size_in_blocks;
   static constexpr uint128_t m_prime{0x800000000000001d};
+
+  // Calculates the powers of 2. This supports LCE queries and reduces the time
+  // from polylogarithmic to logarithmic.
+  static constexpr std::array<uint64_t, 70> calculate_power_table() {
+    std::array<uint64_t, 70> powers;
+    uint128_t x = 256;
+    powers[0] = static_cast<uint64_t>(x);
+    for (size_t i = 1; i < powers.size(); ++i) {
+      x = (x * x) % m_prime;
+      powers[i] = static_cast<uint64_t>(x);
+    }
+    return powers;
+  }
+  static constexpr std::array<uint64_t, 70> m_power_table =
+      calculate_power_table();
+
+  // Return the i'th block. A block contains 8 character.
+  uint64_t get_block(const uint64_t i) const {
+    uint128_t x = (i != 0) ? m_block_fps[i - 1] & 0x7FFFFFFFFFFFFFFFULL : 0;
+    x <<= 64;
+    x %= m_prime;
+
+    uint64_t current_fingerprint = m_block_fps[i];
+    uint64_t s_bit = current_fingerprint >> 63;
+    current_fingerprint &= 0x7FFFFFFFFFFFFFFFULL;
+
+    uint64_t y = static_cast<uint64_t>(x);
+
+    y = y <= current_fingerprint ? current_fingerprint - y
+                                 : m_prime - (y - current_fingerprint);
+    return y + s_bit * static_cast<uint64_t>(m_prime);
+  }
+
+  // Return the i'th block for i > 0.
+  uint64_t get_block_not_first(const uint64_t i) const {
+    assert(i >= 1);
+    uint128_t x = m_block_fps[i - 1] & 0x7FFFFFFFFFFFFFFFULL;
+    x <<= 64;
+    x %= m_prime;
+
+    uint64_t current_fingerprint = m_block_fps[i];
+    uint64_t s_bit = current_fingerprint >> 63;
+    current_fingerprint &= 0x7FFFFFFFFFFFFFFFULL;
+
+    uint64_t y = static_cast<uint64_t>(x);
+
+    y = y <= current_fingerprint ? current_fingerprint - y
+                                 : m_prime - (y - current_fingerprint);
+    return y + s_bit * static_cast<uint64_t>(m_prime);
+  }
+
+  uint128_t fp_to(size_t i) const {
+    uint128_t fingerprint = 0;
+    int pad = ((i + 1) & 7) * 8;
+    if (pad == 0) {
+      // This fingerprints is already saved.
+      // We only have to remove the helping bit.
+      return m_block_fps[i / 8] & 0x7FFFFFFFFFFFFFFFULL;
+    }
+    /* Add fingerprint from previous block */
+    if (i > 7) [[likely]] {
+      fingerprint = m_block_fps[(i / 8) - 1] & 0x7FFFFFFFFFFFFFFFULL;
+      fingerprint <<= pad;
+      uint64_t y = get_block_not_first(i / 8);
+      fingerprint += (y >> (64 - pad));
+
+    } else {
+      const uint64_t current_fingerprint = m_block_fps[0];
+      const uint64_t s_bit = current_fingerprint >> 63;
+
+      fingerprint = current_fingerprint & 0x7FFFFFFFFFFFFFFFULL;
+      fingerprint += (s_bit * m_prime);
+      fingerprint >>= (64 - pad);
+    }
+
+    fingerprint %= m_prime;
+    return static_cast<uint64_t>(fingerprint);
+  };
+
+  // Calculate the fingerprint of T[from, from + 2^exp).
+  uint64_t fp_exp(const uint64_t from, const int exp) const {
+    uint128_t fingerprint_to_i = (from != 0) ? fp_to(from - 1) : 0;
+    uint128_t fingerprint_to_j = fp_to(from + (size_t{1} << exp) - 1);
+    fingerprint_to_i *= m_power_table[exp];
+    fingerprint_to_i %= m_prime;
+
+    return fingerprint_to_j >= fingerprint_to_i
+               ? static_cast<uint64_t>(fingerprint_to_j - fingerprint_to_i)
+               : static_cast<uint64_t>(m_prime -
+                                       (fingerprint_to_i - fingerprint_to_j));
+  }
+
+  // Calculates the fingerprint of T[from, from + 2^exp) when the fingerprint of
+  // T[1, from) is already knwon */
+  uint64_t fp_exp(uint128_t fingerprint_to_i, const uint64_t from,
+                  const int exp) const {
+    uint128_t fingerprint_to_j = fp_to(from + (size_t{1} << exp) - 1);
+    fingerprint_to_i *= m_power_table[exp];
+    fingerprint_to_i %= m_prime;
+
+    return fingerprint_to_j >= fingerprint_to_i
+               ? static_cast<uint64_t>(fingerprint_to_j - fingerprint_to_i)
+               : static_cast<uint64_t>(m_prime -
+                                       (fingerprint_to_i - fingerprint_to_j));
+  }
 };
 }  // namespace alx::lce

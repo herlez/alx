@@ -75,20 +75,20 @@ TEST(ModularArithmetic, MulPow128) {
 }
 
 TEST(ModularArithmetic, SmallMod64) {
-  constexpr uint64_t mod63 = (uint64_t{1} << 61) - 1;
+  constexpr uint64_t mod61 = (uint64_t{1} << 61) - 1;
 
-  std::array<uint64_t, 5> nums{mod63 / 2, mod63 - 1, mod63, mod63 + 1,
-                               (mod63 - 1) * 2};
+  std::array<uint64_t, 5> nums{mod61 / 2, mod61 - 1, mod61, mod61 + 1,
+                               (mod61 - 1) * 2};
 
   for (auto num : nums) {
-    uint64_t res0 = num % mod63;
-    uint64_t res1 = alx::mersenne::mod_naive<uint64_t, mod63>(num);
+    uint64_t res0 = num % mod61;
+    uint64_t res1 = alx::mersenne::mod_naive<uint64_t, mod61>(num);
     EXPECT_EQ(res1, res0);
 
-    uint64_t res2 = alx::mersenne::small_num_mod<uint64_t, mod63>(num);
+    uint64_t res2 = alx::mersenne::small_num_mod<uint64_t, mod61>(num);
     EXPECT_EQ(res2, res0);
 
-    uint64_t res3 = alx::mersenne::small_num_mod_alt<uint64_t, mod63>(num);
+    uint64_t res3 = alx::mersenne::small_num_mod_alt<uint64_t, mod61>(num);
     EXPECT_EQ(res3, res0);
   }
 }
@@ -97,7 +97,7 @@ TEST(ModularArithmetic, SmallMod128) {
   constexpr uint128_t mod107 = (uint128_t{1} << 107) - 1;
 
   std::array<uint128_t, 5> nums{mod107 / 2, mod107 - 1, mod107, mod107 + 1,
-                               (mod107 - 1) * 2};
+                                (mod107 - 1) * 2};
 
   for (auto num : nums) {
     uint128_t res0 = num % mod107;
@@ -109,6 +109,40 @@ TEST(ModularArithmetic, SmallMod128) {
 
     uint128_t res3 = alx::mersenne::small_num_mod_alt<uint128_t, mod107>(num);
     EXPECT_EQ(res3, res0);
+  }
+}
+
+TEST(ModularArithmetic, Mod64) {
+  constexpr uint64_t mod61 = (uint64_t{1} << 61) - 1;
+  constexpr uint64_t mod63 = (uint64_t{1} << 63) - 1;
+
+  std::array<uint64_t, 5> nums{mod63 / 2, mod63 - 1, mod63, mod63 + 1,
+                               (mod63 - 1) * 2};
+
+  for (auto num : nums) {
+    uint64_t res0 = num % mod61;
+    uint64_t res1 = alx::mersenne::mod_naive<uint64_t, mod61>(num);
+    EXPECT_EQ(res1, res0);
+
+    uint64_t res2 = alx::mersenne::mod<uint64_t, mod61>(num);
+    EXPECT_EQ(res2, res0);
+  }
+}
+
+TEST(ModularArithmetic, Mod128) {
+  constexpr uint128_t mod107 = (uint128_t{1} << 107) - 1;
+  constexpr uint128_t mod127 = (uint128_t{1} << 127) - 1;
+
+  std::array<uint128_t, 5> nums{mod127 / 2, mod127 - 1, mod127, mod127 + 1,
+                                (mod127 - 1) * 2};
+
+  for (auto num : nums) {
+    uint128_t res0 = num % mod107;
+    uint128_t res1 = alx::mersenne::mod_naive<uint128_t, mod107>(num);
+    EXPECT_EQ(res1, res0);
+
+    uint64_t res2 = alx::mersenne::mod<uint128_t, mod107>(num);
+    EXPECT_EQ(res2, res0);
   }
 }
 
@@ -131,6 +165,5 @@ TEST(RollingHash, Roll) {
   // check fp
   alx::rolling_hash::rk_prime rolling_hasher_end(text.end() - 16, 16, 123123);
 
-  EXPECT_EQ(rolling_hasher.get_fp(),
-            rolling_hasher_end.get_fp());
+  EXPECT_EQ(rolling_hasher.get_fp(), rolling_hasher_end.get_fp());
 }

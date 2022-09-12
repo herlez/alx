@@ -30,10 +30,20 @@ template <typename T, T t_mersenne_prime>
 inline T small_num_mod(T num) {
   static_assert(is_mersenne_prime(t_mersenne_prime));
   constexpr size_t mersenne_exp = std::bit_width(t_mersenne_prime);
-  assert(num < (t_mersenne_prime - 1) * 2);
+  assert(num <= (t_mersenne_prime - 1) * 2);
 
   T const z = (num + 1) >> mersenne_exp;
   return (num + z) & t_mersenne_prime;
+}
+
+// Return num % prime.
+template <typename T, T t_mersenne_prime>
+inline T mod(T num) {
+  static_assert(is_mersenne_prime(t_mersenne_prime));
+  constexpr size_t mersenne_exp = std::bit_width(t_mersenne_prime);
+
+  num = (num & t_mersenne_prime) + (num >> mersenne_exp);
+  return (num >= t_mersenne_prime) ? (num - t_mersenne_prime) : num;
 }
 
 // For num < (2*(m_prime-1)) return num % prime.
@@ -41,7 +51,7 @@ template <typename T, T t_mersenne_prime>
 inline T small_num_mod_alt(T num) {
   static_assert(is_mersenne_prime(t_mersenne_prime));
   constexpr size_t mersenne_exp = std::bit_width(t_mersenne_prime);
-  assert(num < (t_mersenne_prime - 1) * 2);
+  assert(num <= (t_mersenne_prime - 1) * 2);
 
   num = (num & t_mersenne_prime) + (num >> mersenne_exp);
   assert(num <= t_mersenne_prime);
