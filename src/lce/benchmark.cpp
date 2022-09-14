@@ -6,7 +6,9 @@
  * All rights reserved. Published under the BSD-2 license in the LICENSE file.
  ******************************************************************************/
 
+#ifndef ALX_BENCHMARK_PARALLEL
 #define ALX_MEASURE_SPACE
+#endif
 
 #include <fmt/core.h>
 #include <fmt/ranges.h>
@@ -29,7 +31,9 @@
 
 namespace fs = std::filesystem;
 
-std::vector<std::string> algorithms{"naive", "naive_std", "naive_block", "fp"};
+std::vector<std::string> algorithms{"naive", "naive_std", "naive_block", "fp",
+                                    "fp8",   "fp16",      "fp32",        "fp64",
+                                    "fp128", "fp256",     "fp512"};
 
 class benchmark {
  public:
@@ -73,8 +77,9 @@ class benchmark {
     // Check algorithm flag
     if (std::find(algorithms.begin(), algorithms.end(), algorithm) ==
         algorithms.end()) {
-      std::cout << fmt::format("Algorithm {} is not specified.\n Use one of {}",
-                               algorithm, algorithms);
+      std::cout << fmt::format(
+          "Algorithm {} is not specified.\n Use one of {}\n", algorithm,
+          algorithms);
       return false;
     }
     return true;
@@ -83,6 +88,7 @@ class benchmark {
   void load_text() {
     alx::util::timer t;
     text = alx::util::load_vector<uint8_t>(text_path);
+    text.resize(text.size() + ((text.size() % 8) ? 0 : 8 - (text.size() % 8)));
     assert(text.size() != 0);
     fmt::print(" text={}", text_path.filename().string());
     fmt::print(" text_size={}", text.size());
@@ -97,6 +103,7 @@ class benchmark {
 #endif
     alx::util::timer t;
     lce_ds_type lce_ds(text);
+    fmt::print(" threads={}", omp_get_max_threads());
     fmt::print(" c_time={}", t.get());
 #ifdef ALX_MEASURE_SPACE
     fmt::print(" c_mem={}", malloc_count_current() - mem_before);
@@ -149,13 +156,10 @@ class benchmark {
     if (algo_name != algorithm) {
       return;
     }
-    lce_ds_type lce_ds;
-    if (!check_parameters()) {
-      return;
-    }
+
     fmt::print("RESULT algo={}", algorithm);
     load_text();
-    lce_ds = benchmark_construction<lce_ds_type>();
+    lce_ds_type lce_ds = benchmark_construction<lce_ds_type>();
     fmt::print("\n");
     while (lce_from < lce_to) {
       fmt::print("RESULT algo={}_queries", algorithm);
@@ -169,6 +173,15 @@ class benchmark {
 };
 
 int main(int argc, char** argv) {
+#ifndef ALX_BENCHMARK_PARALLEL
+  if (omp_get_max_threads() != 1) {
+    fmt::print(stderr,
+               "Set option ALX_BENCHMARK_PARALLEL to true or export "
+               "OMP_NUM_THREADS=1\n");
+    return -1;
+  };
+#endif
+
   benchmark b;
 
   tlx::CmdlineParser cp;
@@ -206,10 +219,21 @@ int main(int argc, char** argv) {
   if (!cp.process(argc, argv)) {
     std::exit(EXIT_FAILURE);
   }
-  b.check_parameters();
+  if (b.check_parameters()) {
+    return -1;
+  }
 
   b.run<alx::lce::lce_naive<>>("naive");
   b.run<alx::lce::lce_naive_std<>>("naive_std");
   b.run<alx::lce::lce_naive_block<>>("naive_block");
   b.run<alx::lce::lce_fp<>>("fp");
+  b.run<alx::lce::lce_fp<uint8_t, 8>>("fp8");
+  b.run<alx::lce::lce_fp<uint8_t, 16>>("fp16");
+  b.run<alx::lce::lce_fp<uint8_t, 32>>("fp32");
+  b.run<alx::lce::lce_fp<uint8_t, 64>>("fp64");
+  b.run<alx::lce::lce_fp<uint8_t, 128>>("fp128");
+  b.run<alx::lce::lce_fp<uint8_t, 256>>("fp256");
+  b.run<alx::lce::lce_fp<uint8_t, 512>>("fp512");
+
+  //b.run<alx::lce::lce_sss<uint8_t, 512>>("fp512");
 }

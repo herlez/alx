@@ -22,7 +22,7 @@ class lce_naive_block {
   lce_naive_block() : m_text(nullptr), m_size(0) {
   }
 
-  lce_naive_block(char_type* text, size_t size) : m_text(text), m_size(size) {
+  lce_naive_block(char_type const* text, size_t size) : m_text(text), m_size(size) {
   }
 
   template <typename C>
@@ -66,7 +66,7 @@ class lce_naive_block {
   }
 
   // Returns the number of common letters in text[i..] and text[j..].
-  static size_t lce(char_type* text, size_t size, size_t i, size_t j) {
+  static size_t lce(char_type const* text, size_t size, size_t i, size_t j) {
     if (i == j) [[unlikely]] {
       assert(i < size);
       return size - i;
@@ -75,7 +75,7 @@ class lce_naive_block {
   }
 
   // Returns the number of common letters in text[i..] and text[j..].
-  static size_t lce_uneq(char_type* text, size_t size, size_t i, size_t j) {
+  static size_t lce_uneq(char_type const* text, size_t size, size_t i, size_t j) {
     assert(i != j);
 
     size_t l = std::min(i, j);
@@ -86,7 +86,7 @@ class lce_naive_block {
 
   // Returns the number of common letters in text[i..] and text[j..].
   // Here l must be smaller than r.
-  static size_t lce_lr(char_type* text, size_t size, size_t l, size_t r) {
+  static size_t lce_lr(char_type const* text, size_t size, size_t l, size_t r) {
     assert(l < r);
 
     const uint64_t max_lce = size - r;
@@ -112,7 +112,7 @@ class lce_naive_block {
 
   // Returns {b, lce}, where lce is the number of common letters in text[i..]
   // and text[j..] and b tells whether the lce ends with a mismatch.
-  static std::pair<bool, size_t> lce_mismatch(char_type* text, size_t size,
+  static std::pair<bool, size_t> lce_mismatch(char_type const* text, size_t size,
                                               size_t i, size_t j) {
     if (i == j) [[unlikely]] {
       assert(i < size);
@@ -128,7 +128,7 @@ class lce_naive_block {
 
   // Returns whether text[i..] is lexicographic smaller than text[j..]. Here i
   // and j must be different.
-  static bool is_leq_suffix(char_type* text, size_t size, size_t i, size_t j) {
+  static bool is_leq_suffix(char_type const* text, size_t size, size_t i, size_t j) {
     assert(i != j);
     size_t lce_val = lce_uneq(text, size, i, j);
     return (i + lce_val == size || text[i + lce_val] < text[j + lce_val]);
@@ -152,7 +152,7 @@ class lce_naive_block {
   }
 
  private:
-  char_type* m_text;
+  char_type const* m_text;
   size_t m_size;
 };
 }  // namespace alx::lce

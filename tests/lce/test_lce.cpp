@@ -15,6 +15,7 @@
 #include "lce/lce_naive_block.hpp"
 #include "lce/lce_naive_std.hpp"
 #include "lce/lce_fp.hpp"
+#include "lce/lce_sss.hpp"
 
 template <typename lce_ds_type>
 void test_empty_constructor() {

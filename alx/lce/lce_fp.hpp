@@ -8,16 +8,16 @@
 
 #pragma once
 #include <assert.h>
+#include <omp.h>
 
 #include <bit>
 #include <cstdint>
 
 #include "rolling_hash/modular_arithmetic.hpp"
-#include "rolling_hash/rolling_hash.hpp"
 
 namespace alx::lce {
 
-template <typename t_char_type = uint8_t, size_t t_naive_scan = 128>
+template <typename t_char_type = uint8_t, size_t t_naive_scan = 32>
 class lce_fp {
  public:
   typedef t_char_type char_type;
@@ -30,52 +30,57 @@ class lce_fp {
       : m_block_fps(reinterpret_cast<uint64_t*>(text)),
         m_size(size),
         m_size_in_blocks(1 + (size - 1) / 8) {
-    // Partition text for threads in superblocks.
-    size_t begin = 0;
-    size_t end = m_size_in_blocks;
-    int t = 0;
-    int nt = 1;
-
-    // For small endian systems we need to swap the order of bytes in order to
-    // calculate fingerprints. Luckily this step is fast.
-    if constexpr (std::endian::native == std::endian::little) {
-      for (size_t i = begin; i < end; ++i) {
-        m_block_fps[i] =
-            __builtin_bswap64(m_block_fps[i]);  // C++23 std::byteswap!
-      }
-    }
-
-    // First calculate FP of superblock.
     std::vector<uint64_t> superblock_fps;
-    superblock_fps.resize(nt);
-    if (t != nt - 1) {
-      uint128_t fingerprint = 0;
-      for (size_t i = begin; i < end; ++i) {
-        uint128_t current_block = m_block_fps[i];
-        fingerprint <<= 64;
-        fingerprint += current_block;
-        fingerprint %= m_prime;
-      }
-      superblock_fps[t + 1] = fingerprint;
-    }
-
-    // Prefix sum over fingerprints of superblocks.
-    // critical
-    if (t == 0) {
-      uint128_t shift_influence =
-          modular::pow_mod(uint128_t{1} << 64, uint128_t{end - begin}, m_prime);
-      for (size_t i = 1; i < superblock_fps.size(); ++i) {
-        uint128_t last_block_influence =
-            shift_influence * superblock_fps[i - 1];
-        uint128_t cur_block_influence = superblock_fps[i];
-        superblock_fps[i] =
-            last_block_influence + cur_block_influence % m_prime;
-      }
-    }
-
-    // Synchronize
-    // Overwrite text with fingerprints
+// Partition text for threads in superblocks.
+#pragma omp parallel
     {
+      int t = omp_get_thread_num();
+      int nt = omp_get_num_threads();
+      uint64_t slice_size = m_size_in_blocks / nt;
+      size_t begin = t * slice_size;
+      size_t end = (t < nt - 1) ? (t + 1) * slice_size : m_size_in_blocks;
+
+      // For small endian systems we need to swap the order of bytes in order to
+      // calculate fingerprints. Luckily this step is fast.
+      if constexpr (std::endian::native == std::endian::little) {
+        for (size_t i = begin; i < end; ++i) {
+          m_block_fps[i] =
+              __builtin_bswap64(m_block_fps[i]);  // C++23 std::byteswap!
+        }
+      }
+
+// First calculate FP of superblock.
+#pragma omp single
+      { superblock_fps.resize(nt); }
+#pragma omp barrier
+
+      if (t != nt - 1) {
+        uint128_t fingerprint = 0;
+        for (size_t i = begin; i < end; ++i) {
+          uint128_t current_block = m_block_fps[i];
+          fingerprint <<= 64;
+          fingerprint += current_block;
+          fingerprint %= m_prime;
+        }
+        superblock_fps[t + 1] = fingerprint;
+      }
+
+// Prefix sum over fingerprints of superblocks.
+#pragma omp single
+      {
+        uint128_t shift_influence = modular::pow_mod(
+            uint128_t{1} << 64, uint128_t{end - begin}, m_prime);
+        for (size_t i = 1; i < superblock_fps.size(); ++i) {
+          uint128_t last_block_influence =
+              shift_influence * superblock_fps[i - 1];
+          uint128_t cur_block_influence = superblock_fps[i];
+          superblock_fps[i] =
+              last_block_influence + cur_block_influence % m_prime;
+        }
+      }
+#pragma omp barrier
+
+      // Overwrite text with fingerprints.
       uint128_t fingerprint = superblock_fps[t];
       for (size_t i = begin; i < end; ++i) {
         uint128_t current_block = m_block_fps[i];
@@ -186,7 +191,9 @@ class lce_fp {
   bool is_leq_suffix(size_t i, size_t j) const {
     assert(i != j);
     size_t lce_val = lce_uneq(i, j);
-    return (i + lce_val == m_size || operator[](i + lce_val) < operator[](j + lce_val));
+    return (
+        i + lce_val == m_size || operator[](i + lce_val) < operator[](j +
+                                                                      lce_val));
   }
 
   // Alternative: Calculate influence, and compare fp - influence until mismatch
@@ -205,8 +212,7 @@ class lce_fp {
     uint64_t comp_block_j =
         (block_j << offset_lce2) + ((block_j2 >> 1) >> (63 - offset_lce2));
 
-    const uint64_t max_block_naive =
-        max_lce < t_naive_scan ? max_lce / 8 : t_naive_scan / 8;
+    const uint64_t max_block_naive = std::min(t_naive_scan, max_lce) / 8;
     while (lce < max_block_naive) {
       if (comp_block_i != comp_block_j) {
         break;
@@ -398,5 +404,5 @@ class lce_fp {
                : static_cast<uint64_t>(m_prime -
                                        (fingerprint_to_i - fingerprint_to_j));
   }
-};
+};  // namespace alx::lce
 }  // namespace alx::lce
