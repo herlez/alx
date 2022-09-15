@@ -24,3 +24,6 @@ target_include_directories(alx_lce_sss INTERFACE ${ALX_INCLUDE_DIR})
 target_link_libraries(alx_lce_sss INTERFACE alx_rolling_hash OpenMP::OpenMP_CXX)
 target_link_libraries(alx_lce INTERFACE alx_lce_sss)
 
+#TODO: 
+# Comments & Structure
+# Build data structures so that they handle wider text symbols

@@ -113,7 +113,7 @@ class lce_fp {
     return (get_block(block_number)) >> (8 * offset) & 0xff;
   }
 
-  // Returns the number of common letters in text[i..] and text[j..].
+  // Return the number of common letters in text[i..] and text[j..].
   size_t lce(size_t i, size_t j) const {
     if (i == j) [[unlikely]] {
       assert(i < m_size);
@@ -122,7 +122,7 @@ class lce_fp {
     return lce_uneq(i, j);
   }
 
-  // Returns the number of common letters in text[i..] and text[j..]. Here i and
+  // Return the number of common letters in text[i..] and text[j..]. Here i and
   // j must be different.
   size_t lce_uneq(size_t i, size_t j) const {
     assert(i != j);
@@ -133,7 +133,7 @@ class lce_fp {
     return lce_lr(l, r);
   }
 
-  // Returns the number of common letters in text[i..] and text[j..].
+  // Return the number of common letters in text[i..] and text[j..].
   // Here l must be smaller than r.
   size_t lce_lr(size_t l, size_t r) const {
     uint64_t max_lce = m_size - r;
@@ -171,7 +171,7 @@ class lce_fp {
     return add + lce_scan_to_end(l + add, r + add, max_lce);
   }
 
-  // Returns {b, lce}, where lce is the number of common letters in text[i..]
+  // Return {b, lce}, where lce is the number of common letters in text[i..]
   // and text[j..] and b tells whether the lce ends with a mismatch.
   std::pair<bool, size_t> lce_mismatch(size_t i, size_t j) const {
     if (i == j) [[unlikely]] {
@@ -186,7 +186,7 @@ class lce_fp {
     return {r + lce != m_size, lce};
   }
 
-  // Returns whether text[i..] is lexicographic smaller than text[j..]. Here i
+  // Return whether text[i..] is lexicographic smaller than text[j..]. Here i
   // and j must be different.
   bool is_leq_suffix(size_t i, size_t j) const {
     assert(i != j);
@@ -278,7 +278,7 @@ class lce_fp {
                ((std::countl_zero(comp_block_i ^ comp_block_j)) / 8), max_stub);
   }
 
-  // Returns {b, lce}, where lce is the lce of text[i..i+lce) and text[j..j+lce]
+  // Return {b, lce}, where lce is the lce of text[i..i+lce) and text[j..j+lce]
   // and b tells whether the lce ends with a mismatch.
   /*std::pair<bool, size_t> lce_up_to(size_t i, size_t j, size_t up_to) const {
     if (i == j) [[unlikely]] {

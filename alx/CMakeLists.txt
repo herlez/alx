@@ -10,4 +10,5 @@ target_link_libraries(alx INTERFACE alx_lce)
 add_subdirectory(rolling_hash)
 target_link_libraries(alx INTERFACE alx_rolling_hash)
 
-#add_subdirectory(pred)
+add_subdirectory(pred)
+target_link_libraries(alx INTERFACE alx_pred)

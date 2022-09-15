@@ -98,10 +98,10 @@ class lce_sss {
   }
 
   template <typename C>
-  lce_sss(C& container) : lce_sss(container.data(), container.size()) {
+  lce_sss(C const& container) : lce_sss(container.data(), container.size()) {
   }
 
-  // Returns the number of common letters in text[i..] and text[j..].
+  // Return the number of common letters in text[i..] and text[j..].
   size_t lce(size_t i, size_t j) const {
     if (i == j) [[unlikely]] {
       assert(i < m_size);
@@ -110,7 +110,7 @@ class lce_sss {
     return lce_uneq(i, j);
   }
 
-  // Returns the number of common letters in text[i..] and text[j..]. Here i and
+  // Return the number of common letters in text[i..] and text[j..]. Here i and
   // j must be different.
   size_t lce_uneq(size_t i, size_t j) const {
     assert(i != j);
@@ -121,7 +121,7 @@ class lce_sss {
     return lce_lr(l, r);
   }
 
-  // Returns the number of common letters in text[i..] and text[j..].
+  // Return the number of common letters in text[i..] and text[j..].
   // Here l must be smaller than r.
   inline uint64_t lce_lr(size_t i, size_t j) const {
     return 0;
