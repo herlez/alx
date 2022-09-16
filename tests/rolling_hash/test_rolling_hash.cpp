@@ -157,13 +157,19 @@ TEST(RollingHash, Roll) {
       "aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo "
       "dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus "
       "est Lorem ipsum dolor sit amet.";
-  alx::rolling_hash::rk_prime rolling_hasher(text.begin(), 16, 123123);
+  size_t tau = 16;
+  alx::rolling_hash::rk_prime rolling_hasher(tau, 123123);
   // roll
-  for (size_t i = 0; i < text.size() - 16; ++i) {
-    rolling_hasher.roll();
+  for (size_t i = 0; i < tau; ++i) {
+    rolling_hasher.roll_in(text[i]);
+  }
+  for (size_t i = tau; i < text.size(); ++i) {
+    rolling_hasher.roll(text[i-tau], text[i]);
   }
   // check fp
-  alx::rolling_hash::rk_prime rolling_hasher_end(text.end() - 16, 16, 123123);
-
+  alx::rolling_hash::rk_prime rolling_hasher_end(tau, 123123);
+  for (size_t i = text.size() - tau; i < text.size(); ++i) {
+    rolling_hasher_end.roll_in(text[i]);
+  }
   EXPECT_EQ(rolling_hasher.get_fp(), rolling_hasher_end.get_fp());
 }

@@ -55,7 +55,7 @@ inline T small_num_mod_alt(T num) {
 
   num = (num & t_mersenne_prime) + (num >> mersenne_exp);
   assert(num <= t_mersenne_prime);
-  return (num == t_mersenne_prime) ? (num - t_mersenne_prime) : num;
+  return (num == t_mersenne_prime) ? 0 : num;
 }
 
 // Return num % prime.

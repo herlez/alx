@@ -19,14 +19,13 @@
 namespace alx::rolling_hash {
 __extension__ typedef unsigned __int128 uint128_t;
 
-template <typename t_it, size_t t_prime_exp = 107>
+template <size_t t_prime_exp = 107>
 class rk_prime {
  public:
-  rk_prime(t_it window_start, uint128_t tau, uint128_t base = 0)
-      : m_tau(tau),
-        m_window_start(window_start),
-        m_window_end(window_start + tau),
-        m_fp(0) {
+  rk_prime() : rk_prime(1, 0) {
+  }
+
+  rk_prime(uint128_t tau, uint128_t base = 0) : m_tau(tau), m_fp(0) {
     if (base == 0) {
       uint64_t max =
           (t_prime_exp > 64)
@@ -41,29 +40,26 @@ class rk_prime {
     assert(std::bit_width(m_prime) + std::bit_width(m_base) <= 127);
 
     fill_influence_table();
-    // Calculate first window
-    for (size_t i = 0; i < m_tau; ++i) {
-      roll(0, m_window_start[i]);
-    }
-  }
-
-  // Roll the window by one position.
-  inline uint128_t roll() {
-    m_fp *= m_base;
-    uint128_t border_char_influence =
-        m_char_influence[(unsigned char)(*m_window_start)]
-                        [(unsigned char)(*m_window_end)];
-    m_fp = alx::mersenne::mod<uint128_t, m_prime>(m_fp + border_char_influence);
-    std::advance(m_window_start, 1);
-    std::advance(m_window_end, 1);
-    return m_fp;
   }
 
   // Roll the window by specifying the character that is rolled out of the
   // window and the character that is rolled in the window.
-  inline uint128_t roll(unsigned char out, unsigned in) {
+  inline uint128_t roll_in(unsigned char in) {
+    return roll(0, in);
+  }
+
+  // Roll the window by specifying the character that is rolled out of the
+  // window and the character that is rolled in the window.
+  inline uint128_t roll_out(unsigned char out) {
+    return roll(out, 0);
+  }
+
+  // Roll the window by specifying the character that is rolled out of the
+  // window and the character that is rolled in the window.
+  inline uint128_t roll(unsigned char out, unsigned char in) {
     m_fp *= m_base;
-    m_fp = mersenne::mod<uint128_t, m_prime>(m_fp + m_char_influence[out][in]);
+    m_fp =
+        mersenne::mod<uint128_t, m_prime>(m_fp + m_char_influence[out][in]);
     return m_fp;
   }
 
@@ -85,8 +81,6 @@ class rk_prime {
  private:
   static constexpr uint128_t m_prime = (uint128_t{1} << t_prime_exp) - 1;
   uint128_t m_tau;
-  t_it m_window_start;
-  t_it m_window_end;
   uint128_t m_fp;
 
   uint128_t m_base;

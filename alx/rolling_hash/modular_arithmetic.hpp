@@ -23,7 +23,7 @@ inline T pow_mod(T base, T exp, T prime) {
   return hurchalla::modular_pow(base, exp, prime);
 }
 
-// Return base^exp % prime.
+// Return base*exp % prime.
 template <typename T>
 inline T mult_mod(T a, T b, T prime) {
   return hurchalla::modular_multiplication_prereduced_inputs(a, b, prime);

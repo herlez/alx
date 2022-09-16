@@ -42,7 +42,7 @@ class benchmark {
 
   fs::path queries_path;
   std::vector<size_t> queries;
-  size_t num_lce_queries = size_t{1'000'000};
+  size_t num_queries = size_t{1'000'000};
   size_t lce_from = 0;
   size_t lce_to = 20;
 
@@ -123,12 +123,12 @@ class benchmark {
     if (queries.size() != 0) {
       size_t num_unique_queries = queries.size();
       assert(num_unique_queries % 2 == 0);
-      queries.resize(num_lce_queries * 2);
+      queries.resize(num_queries * 2);
       for (size_t i = num_unique_queries; i < queries.size(); ++i) {
         queries[i] = queries[i % num_unique_queries];
       }
     }
-    assert(queries.size() == 0 || queries.size() == num_lce_queries * 2);
+    assert(queries.size() == 0 || queries.size() == num_queries * 2);
     fmt::print(" q_path={}", cur_query_path.string());
     fmt::print(" q_size={}", queries.size() / 2);
     fmt::print(" q_load_time={}", t.get());
@@ -151,8 +151,6 @@ class benchmark {
 
   template <typename lce_ds_type>
   void run(std::string const& algo_name) {
-    assert(std::find(algorithms.begin(), algorithms.end(), algo_name) !=
-           algorithms.end());
     if (algo_name != algorithm) {
       return;
     }
@@ -198,7 +196,7 @@ int main(int argc, char** argv) {
   cp.add_path("queries_path", b.queries_path,
               "The path to the generated queries (default="
               "text_path.remove_filename()).");
-  cp.add_bytes('q', "num_queries", b.num_lce_queries,
+  cp.add_bytes('q', "num_queries", b.num_queries,
                "Number of LCE queries that are executed (default=1,000,000).");
   cp.add_bytes(
       "from", b.lce_from,
