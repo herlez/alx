@@ -33,8 +33,8 @@
 namespace fs = std::filesystem;
 
 std::vector<std::string> algorithms{
-    "all", "naive", "naive_std", "naive_wordwise", "naive_memcmp",
-};
+    "all",  "naive", "naive_std", "naive_wordwise", "naive_memcmp", "fp8",
+    "fp16", "fp32",  "fp64",      "fp128",          "fp256",        "fp512"};
 
 class benchmark {
  public:
@@ -178,15 +178,13 @@ int main(int argc, char** argv) {
   b.run<alx::lce::lce_naive_wordwise<>>("naive_wordwise");
   b.run<alx::lce::lce_memcmp>("naive_memcmp");
 
-  /*
-  b.run<alx::lce::lce_fp<>>("fp");
   b.run<alx::lce::lce_fp<uint8_t, 8>>("fp8");
   b.run<alx::lce::lce_fp<uint8_t, 16>>("fp16");
   b.run<alx::lce::lce_fp<uint8_t, 32>>("fp32");
   b.run<alx::lce::lce_fp<uint8_t, 64>>("fp64");
   b.run<alx::lce::lce_fp<uint8_t, 128>>("fp128");
   b.run<alx::lce::lce_fp<uint8_t, 256>>("fp256");
-  b.run<alx::lce::lce_fp<uint8_t, 512>>("fp512");*/
+  b.run<alx::lce::lce_fp<uint8_t, 512>>("fp512");
 
   // b.run<alx::lce::lce_sss<uint8_t, 512>>("fp512");
 }

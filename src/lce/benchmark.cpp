@@ -32,8 +32,8 @@
 namespace fs = std::filesystem;
 
 std::vector<std::string> algorithms{
-    "all",  "naive", "naive_std", "naive_wordwise", "fp",    "fp8",
-    "fp16", "fp32",  "fp64",      "fp128",          "fp256", "fp512"};
+    "all",  "naive", "naive_std", "naive_wordwise", "fp8",  "fp16",
+    "fp32", "fp64",  "fp128",     "fp256",          "fp512"};
 
 class benchmark {
  public:
@@ -221,7 +221,6 @@ int main(int argc, char** argv) {
   b.run<alx::lce::lce_naive<>>("naive");
   b.run<alx::lce::lce_naive_std<>>("naive_std");
   b.run<alx::lce::lce_naive_wordwise<>>("naive_wordwise");
-  b.run<alx::lce::lce_fp<>>("fp");
   b.run<alx::lce::lce_fp<uint8_t, 8>>("fp8");
   b.run<alx::lce::lce_fp<uint8_t, 16>>("fp16");
   b.run<alx::lce::lce_fp<uint8_t, 32>>("fp32");
