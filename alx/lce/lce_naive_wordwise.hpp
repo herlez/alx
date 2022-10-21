@@ -1,5 +1,5 @@
 /*******************************************************************************
- * alx/lce/lce_naive_block.hpp
+ * alx/lce/lce_naive_wordwise.hpp
  *
  * Copyright (C) 2022 Alexander Herlez <alexander.herlez@tu-dortmund.de>
  *
@@ -14,20 +14,21 @@
 namespace alx::lce {
 
 template <typename t_char_type = uint8_t>
-class lce_naive_block {
+class lce_naive_wordwise {
  public:
   typedef t_char_type char_type;
   __extension__ typedef unsigned __int128 uint128_t;
 
-  lce_naive_block() : m_text(nullptr), m_size(0) {
+  lce_naive_wordwise() : m_text(nullptr), m_size(0) {
   }
 
-  lce_naive_block(char_type const* text, size_t size) : m_text(text), m_size(size) {
+  lce_naive_wordwise(char_type const* text, size_t size)
+      : m_text(text), m_size(size) {
   }
 
   template <typename C>
-  lce_naive_block(C const& container)
-      : lce_naive_block(container.data(), container.size()) {
+  lce_naive_wordwise(C const& container)
+      : lce_naive_wordwise(container.data(), container.size()) {
   }
 
   // Return the number of common letters in text[i..] and text[j..].
@@ -75,7 +76,8 @@ class lce_naive_block {
   }
 
   // Return the number of common letters in text[i..] and text[j..].
-  static size_t lce_uneq(char_type const* text, size_t size, size_t i, size_t j) {
+  static size_t lce_uneq(char_type const* text, size_t size, size_t i,
+                         size_t j) {
     assert(i != j);
 
     size_t l = std::min(i, j);
@@ -99,10 +101,11 @@ class lce_naive_block {
         reinterpret_cast<uint128_t const*>(text + r);
     size_t lce_val =
         std::distance(text_blocks_j,
-                      std::mismatch(text_blocks_j, text_blocks_j + max_lce / 16,
+                      std::mismatch(text_blocks_j,
+                                    text_blocks_j + max_lce / sizeof(uint128_t),
                                     text_blocks_i)
                           .first);
-    lce_val *= 16;
+    lce_val *= sizeof(uint128_t);
     // The last block did not match. Here we compare its single characters
     while (lce_val < max_lce && text[l + lce_val] == text[r + lce_val]) {
       ++lce_val;
@@ -112,8 +115,8 @@ class lce_naive_block {
 
   // Return {b, lce}, where lce is the number of common letters in text[i..]
   // and text[j..] and b tells whether the lce ends with a mismatch.
-  static std::pair<bool, size_t> lce_mismatch(char_type const* text, size_t size,
-                                              size_t i, size_t j) {
+  static std::pair<bool, size_t> lce_mismatch(char_type const* text,
+                                              size_t size, size_t i, size_t j) {
     if (i == j) [[unlikely]] {
       assert(i < size);
       return {false, size - i};
@@ -128,7 +131,8 @@ class lce_naive_block {
 
   // Return whether text[i..] is lexicographic smaller than text[j..]. Here i
   // and j must be different.
-  static bool is_leq_suffix(char_type const* text, size_t size, size_t i, size_t j) {
+  static bool is_leq_suffix(char_type const* text, size_t size, size_t i,
+                            size_t j) {
     assert(i != j);
     size_t lce_val = lce_uneq(text, size, i, j);
     return (i + lce_val == size || text[i + lce_val] < text[j + lce_val]);

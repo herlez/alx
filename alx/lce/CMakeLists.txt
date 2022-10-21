@@ -4,13 +4,17 @@ add_library(alx_lce_naive INTERFACE)
 target_include_directories(alx_lce_naive INTERFACE ${ALX_INCLUDE_DIR})
 target_link_libraries(alx_lce INTERFACE alx_lce_naive)
 
-add_library(alx_lce_naive_block INTERFACE)
-target_include_directories(alx_lce_naive_block INTERFACE ${ALX_INCLUDE_DIR})
-target_link_libraries(alx_lce INTERFACE alx_lce_naive_block)
+add_library(alx_lce_naive_wordwise INTERFACE)
+target_include_directories(alx_lce_naive_wordwise INTERFACE ${ALX_INCLUDE_DIR})
+target_link_libraries(alx_lce INTERFACE alx_lce_naive_wordwise)
 
 add_library(alx_lce_std INTERFACE)
 target_include_directories(alx_lce_std INTERFACE ${ALX_INCLUDE_DIR})
 target_link_libraries(alx_lce INTERFACE alx_lce_std)
+
+add_library(alx_memcmp INTERFACE)
+target_include_directories(alx_memcmp INTERFACE ${ALX_INCLUDE_DIR})
+target_link_libraries(alx_lce INTERFACE alx_memcmp)
 
 find_package(OpenMP)
 add_library(alx_lce_fp INTERFACE)

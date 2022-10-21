@@ -24,16 +24,16 @@
 
 #include "lce/lce_fp.hpp"
 #include "lce/lce_naive.hpp"
-#include "lce/lce_naive_block.hpp"
 #include "lce/lce_naive_std.hpp"
+#include "lce/lce_naive_wordwise.hpp"
 #include "util/io.hpp"
 #include "util/timer.hpp"
 
 namespace fs = std::filesystem;
 
-std::vector<std::string> algorithms{"naive", "naive_std", "naive_block", "fp",
-                                    "fp8",   "fp16",      "fp32",        "fp64",
-                                    "fp128", "fp256",     "fp512"};
+std::vector<std::string> algorithms{
+    "naive", "naive_std", "naive_wordwise", "fp",    "fp8",  "fp16",
+    "fp32",  "fp64",      "fp128",          "fp256", "fp512"};
 
 class benchmark {
  public:
@@ -223,7 +223,7 @@ int main(int argc, char** argv) {
 
   b.run<alx::lce::lce_naive<>>("naive");
   b.run<alx::lce::lce_naive_std<>>("naive_std");
-  b.run<alx::lce::lce_naive_block<>>("naive_block");
+  b.run<alx::lce::lce_naive_wordwise<>>("naive_wordwise");
   b.run<alx::lce::lce_fp<>>("fp");
   b.run<alx::lce::lce_fp<uint8_t, 8>>("fp8");
   b.run<alx::lce::lce_fp<uint8_t, 16>>("fp16");
@@ -233,5 +233,5 @@ int main(int argc, char** argv) {
   b.run<alx::lce::lce_fp<uint8_t, 256>>("fp256");
   b.run<alx::lce::lce_fp<uint8_t, 512>>("fp512");
 
-  //b.run<alx::lce::lce_sss<uint8_t, 512>>("fp512");
+  // b.run<alx::lce::lce_sss<uint8_t, 512>>("fp512");
 }

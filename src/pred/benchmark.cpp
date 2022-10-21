@@ -93,7 +93,7 @@ class benchmark {
 #endif
     alx::util::timer t;
     pred_ds_type pred_ds(vec);
-    fmt::print(" threads={}", omp_get_max_threads());
+    //fmt::print(" threads={}", omp_get_max_threads());
     fmt::print(" c_time={}", t.get());
 #ifdef ALX_MEASURE_SPACE
     fmt::print(" c_mem={}", malloc_count_current() - mem_before);
@@ -187,6 +187,6 @@ int main(int argc, char** argv) {
   alx::pred::binsearch_std<uint32_t> pred(vec.data(), vec.size());
   alx::pred::binsearch_std<uint32_t> pred2(vec);
 
-  predecessor_benchmark b;
-  b.run();
+  //predecessor_benchmark b;
+  //b.run();
 }

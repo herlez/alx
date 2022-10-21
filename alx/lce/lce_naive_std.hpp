@@ -21,7 +21,8 @@ class lce_naive_std {
   lce_naive_std() : m_text(nullptr), m_size(0) {
   }
 
-  lce_naive_std(char_type const* text, size_t size) : m_text(text), m_size(size) {
+  lce_naive_std(char_type const* text, size_t size)
+      : m_text(text), m_size(size) {
   }
 
   template <typename C>
@@ -74,7 +75,8 @@ class lce_naive_std {
   }
 
   // Return the number of common letters in text[i..] and text[j..].
-  static size_t lce_uneq(char_type const* text, size_t size, size_t i, size_t j) {
+  static size_t lce_uneq(char_type const* text, size_t size, size_t i,
+                         size_t j) {
     assert(i != j);
 
     size_t l = std::min(i, j);
@@ -87,18 +89,14 @@ class lce_naive_std {
   // Here l must be smaller than r.
   static size_t lce_lr(char_type const* text, size_t size, size_t l, size_t r) {
     assert(l < r);
-    size_t lce = 0;
-    while (r + lce < size && text[l + lce] == text[r + lce]) {
-      ++lce;
-    }
     return std::distance(text + r,
                          std::mismatch(text + r, text + size, text + l).first);
   }
 
   // Return {b, lce}, where lce is the number of common letters in text[i..]
   // and text[j..] and b tells whether the lce ends with a mismatch.
-  static std::pair<bool, size_t> lce_mismatch(char_type const* text, size_t size,
-                                              size_t i, size_t j) {
+  static std::pair<bool, size_t> lce_mismatch(char_type const* text,
+                                              size_t size, size_t i, size_t j) {
     if (i == j) [[unlikely]] {
       assert(i < size);
       return {false, size - i};
@@ -113,7 +111,8 @@ class lce_naive_std {
 
   // Return whether text[i..] is lexicographic smaller than text[j..]. Here i
   // and j must be different.
-  static bool is_leq_suffix(char_type const* text, size_t size, size_t i, size_t j) {
+  static bool is_leq_suffix(char_type const* text, size_t size, size_t i,
+                            size_t j) {
     assert(i != j);
     size_t lce_val = lce_uneq(text, size, i, j);
     return (i + lce_val == size || text[i + lce_val] < text[j + lce_val]);
