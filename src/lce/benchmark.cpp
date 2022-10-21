@@ -32,8 +32,8 @@
 namespace fs = std::filesystem;
 
 std::vector<std::string> algorithms{
-    "naive", "naive_std", "naive_wordwise", "fp",    "fp8",  "fp16",
-    "fp32",  "fp64",      "fp128",          "fp256", "fp512"};
+    "all",  "naive", "naive_std", "naive_wordwise", "fp",    "fp8",
+    "fp16", "fp32",  "fp64",      "fp128",          "fp256", "fp512"};
 
 class benchmark {
  public:
@@ -77,9 +77,8 @@ class benchmark {
     // Check algorithm flag
     if (std::find(algorithms.begin(), algorithms.end(), algorithm) ==
         algorithms.end()) {
-      std::cout << fmt::format(
-          "Algorithm {} is not specified.\n Use one of {}\n", algorithm,
-          algorithms);
+      fmt::print("Algorithm {} is not specified.\n Use one of {}\n", algorithm,
+                 algorithms);
       return false;
     }
     return true;
@@ -151,21 +150,24 @@ class benchmark {
 
   template <typename lce_ds_type>
   void run(std::string const& algo_name) {
-    if (algo_name != algorithm) {
+    if (algo_name != algorithm && algorithm != "all") {
       return;
     }
-
-    fmt::print("RESULT algo={}", algorithm);
+    // Benchmark construction
+    fmt::print("RESULT algo={}", algo_name);
     load_text();
     lce_ds_type lce_ds = benchmark_construction<lce_ds_type>();
     fmt::print("\n");
-    while (lce_from < lce_to) {
-      fmt::print("RESULT algo={}_queries", algorithm);
+
+    // Benchmark queries
+    size_t lce_cur = lce_from;
+    while (lce_cur < lce_to) {
+      fmt::print("RESULT algo={}_queries", algo_name);
       fmt::print(" lce_range={}", lce_from);
       load_queries();
       benchmark_queries<lce_ds_type>(lce_ds);
       fmt::print("\n");
-      ++lce_from;
+      ++lce_cur;
     }
   }
 };
@@ -205,19 +207,14 @@ int main(int argc, char** argv) {
       "to", b.lce_to,
       "Use only lce queries which return up to 2^{to}-1 with (default=21)");
 
-  // TODO: ADD ALGORITHMS
   cp.add_string(
       'a', "algorithm", b.algorithm,
-      "LCE data structure "
-      "that is computed: [u]ltra naive (default), [n]aive, "
-      "prezza [m]ersenne, [p]rezza, or [s]tring synchronizing sets "
-      "with tau = 512. [s2048], [s1024], [s512], [s256] for different tau "
-      "values. Suffix _par for parallel sss, e.g. [s256_par]");
+      fmt::format("LCE data structure that is computed: {}", algorithms));
 
   if (!cp.process(argc, argv)) {
     std::exit(EXIT_FAILURE);
   }
-  if (b.check_parameters()) {
+  if (!b.check_parameters()) {
     return -1;
   }
 

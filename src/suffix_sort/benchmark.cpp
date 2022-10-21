@@ -104,12 +104,14 @@ class benchmark {
   }
 
   template <typename lce_ds_type>
-  void benchmark_ss(lce_ds_type& lce_ds) {
+  void benchmark_ss() {
     if (sa.empty()) {
       return;
     }
 
     alx::util::timer t;
+    lce_ds_type lce_ds = benchmark_construction<lce_ds_type>();
+
     std::sort(sa.begin(), sa.end(), [&lce_ds](size_t i, size_t j) {
       return lce_ds.is_leq_suffix(i, j);
     });
@@ -129,13 +131,11 @@ class benchmark {
       return;
     }
 
+    // Benchmark suffix sorting
     fmt::print("RESULT algo={}", algo_name);
     load_text();
-    lce_ds_type lce_ds = benchmark_construction<lce_ds_type>();
-
     load_sa();
-
-    benchmark_ss<lce_ds_type>(lce_ds);
+    benchmark_ss<lce_ds_type>();
     fmt::print("\n");
   }
 };
