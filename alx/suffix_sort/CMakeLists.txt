@@ -1,0 +1,1 @@
+add_library(alx_suffix_sort INTERFACE)

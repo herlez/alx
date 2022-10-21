@@ -43,7 +43,6 @@ class lce_memcmp {
     size_t r = std::max(i, j);
     size_t max_lce = (size - r);
     int result = std::memcmp(text + i, text + j, max_lce);
-    std::cout << result << "/n";
     return (result < 0) || (result == 0 && (i > j));
   }
 
