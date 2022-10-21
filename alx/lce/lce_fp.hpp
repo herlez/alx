@@ -30,6 +30,7 @@ class lce_fp {
       : m_block_fps(reinterpret_cast<uint64_t*>(text)),
         m_size(size),
         m_size_in_blocks(1 + (size - 1) / 8) {
+    assert(text.size() % 8 == 0);
     std::vector<uint64_t> superblock_fps;
 // Partition text for threads in superblocks.
 #pragma omp parallel
@@ -69,13 +70,13 @@ class lce_fp {
 #pragma omp single
       {
         uint128_t shift_influence = modular::pow_mod(
-            uint128_t{1} << 64, uint128_t{end - begin}, m_prime);
+            uint128_t{1} << 64, uint128_t{slice_size}, m_prime);
         for (size_t i = 1; i < superblock_fps.size(); ++i) {
           uint128_t last_block_influence =
               shift_influence * superblock_fps[i - 1];
           uint128_t cur_block_influence = superblock_fps[i];
           superblock_fps[i] =
-              last_block_influence + cur_block_influence % m_prime;
+              (last_block_influence + cur_block_influence) % m_prime;
         }
       }
 #pragma omp barrier
@@ -191,9 +192,10 @@ class lce_fp {
   bool is_leq_suffix(size_t i, size_t j) const {
     assert(i != j);
     size_t lce_val = lce_uneq(i, j);
-    return (
-        i + lce_val == m_size || operator[](i + lce_val) < operator[](j +
-                                                                      lce_val));
+    return i + lce_val == m_size ||
+           ((j + lce_val != m_size) && operator[](i + lce_val) < operator[](
+                                                                     j +
+                                                                     lce_val));
   }
 
   // Alternative: Calculate influence, and compare fp - influence until mismatch
@@ -280,19 +282,51 @@ class lce_fp {
 
   // Return {b, lce}, where lce is the lce of text[i..i+lce) and text[j..j+lce]
   // and b tells whether the lce ends with a mismatch.
-  /*std::pair<bool, size_t> lce_up_to(size_t i, size_t j, size_t up_to) const {
+  std::pair<bool, size_t> lce_up_to(size_t i, size_t j, size_t up_to) const {
     if (i == j) [[unlikely]] {
-      assert(i < size);
-      return {false, size - i};
+      assert(i < m_size);
+      return {false, m_size - i};
     }
 
     size_t l = std::min(i, j);
     size_t r = std::max(i, j);
 
-    size_t lce_max = std::min(r + up_to, size) - r;
-    size_t lce = lce_lr(l, r);
-    return {lce < lce_max, lce};
-  }*/
+    uint64_t max_lce = std::min(m_size - r, up_to);
+    uint64_t lce = lce_scan(l, r, max_lce);
+    if (lce < t_naive_scan) {
+      return {lce < max_lce, lce};
+    }
+    // Exponential search
+    uint64_t dist = t_naive_scan * 2;
+    int exp = std::countr_zero(dist);
+
+    const uint128_t fingerprint_to_l = (l != 0) ? fp_to(l - 1) : 0;
+    const uint128_t fingerprint_to_r = (r != 0) ? fp_to(r - 1) : 0;
+
+    while (dist <= max_lce && fp_exp(fingerprint_to_l, l, exp) ==
+                                  fp_exp(fingerprint_to_r, r, exp)) {
+      ++exp;
+      dist *= 2;
+    }
+
+    // Binary search. We start it at i2 and j2, because we know that up until
+    // i2 and j2 everything matched.
+    --exp;
+    dist /= 2;
+    uint64_t add = dist;
+
+    while (dist > t_naive_scan) {
+      --exp;
+      dist /= 2;
+      if (fp_exp(l + add, exp) == fp_exp(r + add, exp)) {
+        add += dist;
+      }
+    }
+    max_lce -= add;
+    lce = add + lce_scan_to_end(l + add, r + add, max_lce);
+
+    return {lce < max_lce, lce};
+  }
 
  private:
   uint64_t* m_block_fps;

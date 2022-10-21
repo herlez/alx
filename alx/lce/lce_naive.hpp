@@ -117,7 +117,7 @@ class lce_naive {
                             size_t j) {
     assert(i != j);
     size_t lce_val = lce_uneq(text, size, i, j);
-    return (i + lce_val == size || text[i + lce_val] < text[j + lce_val]);
+    return (i + lce_val == size || ((j + lce_val != size) && text[i + lce_val] < text[j + lce_val]));
   }
 
   // Return {b, lce}, where lce is the lce of text[i..i+lce) and text[j..j+lce]

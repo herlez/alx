@@ -70,27 +70,26 @@ void test_suffix_sorting() {
 template <typename lce_ds_type>
 void test_variants() {
   typedef typename lce_ds_type::char_type char_typee;
-  static_assert(sizeof(char_typee) > 1);
-  std::vector<char_typee> text(2000);
-  std::iota(text.begin(), text.begin() + 1000,
+  std::vector<char_typee> text(200);
+  std::iota(text.begin(), text.begin() + 100,
             std::numeric_limits<char_typee>::max() / 2);
-  std::iota(text.begin() + 1000, text.end(),
+  std::iota(text.begin() + 100, text.end(),
             std::numeric_limits<char_typee>::max() / 2);
 
   lce_ds_type ds(text);
-  EXPECT_EQ(ds.lce_lr(0, 1000), 1000);
-  EXPECT_EQ(ds.lce(500, 1000), 0);
+  EXPECT_EQ(ds.lce_lr(0, 100), 100);
+  EXPECT_EQ(ds.lce(50, 100), 0);
 
-  EXPECT_EQ(ds.lce_mismatch(1000, 0), std::make_pair(false, size_t{1000}));
-  EXPECT_EQ(ds.lce_mismatch(1000, 500), std::make_pair(true, size_t{0}));
+  EXPECT_EQ(ds.lce_mismatch(100, 0), std::make_pair(false, size_t{100}));
+  EXPECT_EQ(ds.lce_mismatch(100, 50), std::make_pair(true, size_t{0}));
 
-  EXPECT_EQ(ds.is_leq_suffix(500, 1500), false);
-  EXPECT_EQ(ds.is_leq_suffix(1500, 500), true);
-  EXPECT_EQ(ds.is_leq_suffix(0, 500), true);
-  EXPECT_EQ(ds.is_leq_suffix(500, 0), false);
+  EXPECT_EQ(ds.is_leq_suffix(50, 150), false);
+  EXPECT_EQ(ds.is_leq_suffix(150, 50), true);
+  EXPECT_EQ(ds.is_leq_suffix(0, 50), true);
+  EXPECT_EQ(ds.is_leq_suffix(50, 0), false);
 
-  // EXPECT_EQ(ds.lce_up_to(1000, 0, 200), std::make_pair(false, size_t{200}));
-  // EXPECT_EQ(ds.lce_up_to(1000, 500, 200), std::make_pair(true, size_t{0}));
+  EXPECT_EQ(ds.lce_up_to(100, 0, 20), std::make_pair(false, size_t{20}));
+  EXPECT_EQ(ds.lce_up_to(100, 50, 20), std::make_pair(true, size_t{0}));
 }
 
 template <typename lce_ds_type>
@@ -124,6 +123,14 @@ TEST(LceNaive, All) {
   test_simple<alx::lce::lce_naive<uint64_t>>();
   test_simple<alx::lce::lce_naive<int64_t>>();
   test_simple<alx::lce::lce_naive<__uint128_t>>();
+  
+  test_variants<alx::lce::lce_naive<unsigned char>>();
+  test_variants<alx::lce::lce_naive<char>>();
+  test_variants<alx::lce::lce_naive<uint8_t>>();
+  test_variants<alx::lce::lce_naive<uint32_t>>();
+  test_variants<alx::lce::lce_naive<int32_t>>();
+  test_variants<alx::lce::lce_naive<uint64_t>>();
+  test_variants<alx::lce::lce_naive<int64_t>>();
   test_variants<alx::lce::lce_naive<__uint128_t>>();
 }
 
@@ -137,11 +144,19 @@ TEST(LceNaiveStd, All) {
   test_simple<alx::lce::lce_naive_std<uint64_t>>();
   test_simple<alx::lce::lce_naive_std<int64_t>>();
   test_simple<alx::lce::lce_naive_std<__uint128_t>>();
+
+  test_variants<alx::lce::lce_naive_std<unsigned char>>();
+  test_variants<alx::lce::lce_naive_std<char>>();
+  test_variants<alx::lce::lce_naive_std<uint8_t>>();
+  test_variants<alx::lce::lce_naive_std<uint32_t>>();
+  test_variants<alx::lce::lce_naive_std<int32_t>>();
+  test_variants<alx::lce::lce_naive_std<uint64_t>>();
+  test_variants<alx::lce::lce_naive_std<int64_t>>();
   test_variants<alx::lce::lce_naive_std<__uint128_t>>();
 }
 
-TEST(LceNaiveBlock, All) {
-  test_empty_constructor<alx::lce::lce_naive_std<unsigned char>>();
+TEST(LceNaiveWordwise, All) {
+  test_empty_constructor<alx::lce::lce_naive_wordwise<unsigned char>>();
   test_simple<alx::lce::lce_naive_wordwise<unsigned char>>();
   test_simple<alx::lce::lce_naive_wordwise<char>>();
   test_simple<alx::lce::lce_naive_wordwise<uint8_t>>();
@@ -150,17 +165,30 @@ TEST(LceNaiveBlock, All) {
   test_simple<alx::lce::lce_naive_wordwise<uint64_t>>();
   test_simple<alx::lce::lce_naive_wordwise<int64_t>>();
   test_simple<alx::lce::lce_naive_wordwise<__uint128_t>>();
+
+  test_variants<alx::lce::lce_naive_wordwise<unsigned char>>();
+  test_variants<alx::lce::lce_naive_wordwise<char>>();
+  test_variants<alx::lce::lce_naive_wordwise<uint8_t>>();
+  test_variants<alx::lce::lce_naive_wordwise<uint32_t>>();
+  test_variants<alx::lce::lce_naive_wordwise<int32_t>>();
+  test_variants<alx::lce::lce_naive_wordwise<uint64_t>>();
+  test_variants<alx::lce::lce_naive_wordwise<int64_t>>();
   test_variants<alx::lce::lce_naive_wordwise<__uint128_t>>();
 }
 
 TEST(LceMemcmp, SS) {
+  test_empty_constructor<alx::lce::lce_memcmp>();
   test_suffix_sorting<alx::lce::lce_memcmp>();
 }
 
-/*TEST(LceFP, All) {
+TEST(LceFP, All) {
   test_empty_constructor<alx::lce::lce_naive_std<unsigned char>>();
   test_retransform<alx::lce::lce_fp<unsigned char>>();
   test_simple<alx::lce::lce_fp<unsigned char>>();
   test_simple<alx::lce::lce_fp<char>>();
   test_simple<alx::lce::lce_fp<uint8_t>>();
-}*/
+
+  test_variants<alx::lce::lce_fp<unsigned char>>();
+  test_variants<alx::lce::lce_fp<char>>();
+  test_variants<alx::lce::lce_fp<uint8_t>>();
+}

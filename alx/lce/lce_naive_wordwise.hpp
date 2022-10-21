@@ -135,12 +135,12 @@ class lce_naive_wordwise {
                             size_t j) {
     assert(i != j);
     size_t lce_val = lce_uneq(text, size, i, j);
-    return (i + lce_val == size || text[i + lce_val] < text[j + lce_val]);
+    return (i + lce_val == size || ((j + lce_val != size) && text[i + lce_val] < text[j + lce_val]));
   }
 
   // Return {b, lce}, where lce is the lce of text[i..i+lce) and text[j..j+lce]
   // and b tells whether the lce ends with a mismatch.
-  static std::pair<bool, size_t> lce_up_to(char_type* text, size_t size,
+  static std::pair<bool, size_t> lce_up_to(char_type const* text, size_t size,
                                            size_t i, size_t j, size_t up_to) {
     if (i == j) [[unlikely]] {
       assert(i < size);
