@@ -16,6 +16,10 @@ add_library(alx_memcmp INTERFACE)
 target_include_directories(alx_memcmp INTERFACE ${ALX_INCLUDE_DIR})
 target_link_libraries(alx_lce INTERFACE alx_memcmp)
 
+add_library(alx_rk_prezza INTERFACE)
+target_link_libraries(alx_rk_prezza INTERFACE rk-lce)
+target_link_libraries(alx_lce INTERFACE alx_rk_prezza)
+
 find_package(OpenMP)
 add_library(alx_lce_fp INTERFACE)
 target_include_directories(alx_lce_fp INTERFACE ${ALX_INCLUDE_DIR})
@@ -27,6 +31,8 @@ add_library(alx_lce_sss INTERFACE)
 target_include_directories(alx_lce_sss INTERFACE ${ALX_INCLUDE_DIR})
 target_link_libraries(alx_lce_sss INTERFACE alx_rolling_hash OpenMP::OpenMP_CXX)
 target_link_libraries(alx_lce INTERFACE alx_lce_sss)
+
+
 
 #TODO: 
 # Comments & Structure

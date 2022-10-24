@@ -26,14 +26,15 @@
 #include "lce/lce_naive.hpp"
 #include "lce/lce_naive_std.hpp"
 #include "lce/lce_naive_wordwise.hpp"
+#include "lce/lce_rk_prezza.hpp"
 #include "util/io.hpp"
 #include "util/timer.hpp"
 
 namespace fs = std::filesystem;
 
 std::vector<std::string> algorithms{
-    "all",  "naive", "naive_std", "naive_wordwise", "fp8",  "fp16",
-    "fp32", "fp64",  "fp128",     "fp256",          "fp512"};
+    "all",  "naive", "naive_std", "naive_wordwise", "fp8",   "fp16",
+    "fp32", "fp64",  "fp128",     "fp256",          "fp512", "rk-prezza"};
 
 class benchmark {
  public:
@@ -228,6 +229,7 @@ int main(int argc, char** argv) {
   b.run<alx::lce::lce_fp<uint8_t, 128>>("fp128");
   b.run<alx::lce::lce_fp<uint8_t, 256>>("fp256");
   b.run<alx::lce::lce_fp<uint8_t, 512>>("fp512");
+  b.run<rklce::lce_rk_prezza>("rk-prezza");
 
   // b.run<alx::lce::lce_sss<uint8_t, 512>>("fp512");
 }

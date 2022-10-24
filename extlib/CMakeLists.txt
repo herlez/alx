@@ -1,3 +1,9 @@
+set(ALX_EXTLIB_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+message(STATUS "alx extlib path: ${ALX_EXTLIB_DIR}")
+
+add_library(rk-lce INTERFACE)
+target_include_directories(rk-lce INTERFACE rk-lce/internal) 
+
 add_library(tlx_clp tlx/tlx/cmdline_parser.cpp tlx/tlx/string/parse_si_iec_units.cpp)
 target_include_directories(tlx_clp PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/tlx)
 

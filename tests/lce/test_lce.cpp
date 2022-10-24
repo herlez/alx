@@ -17,6 +17,7 @@
 #include "lce/lce_naive_std.hpp"
 #include "lce/lce_naive_wordwise.hpp"
 #include "lce/lce_sss.hpp"
+#include "lce/lce_rk_prezza.hpp"
 
 template <typename lce_ds_type>
 void test_empty_constructor() {
@@ -191,4 +192,9 @@ TEST(LceFP, All) {
   test_variants<alx::lce::lce_fp<unsigned char>>();
   test_variants<alx::lce::lce_fp<char>>();
   test_variants<alx::lce::lce_fp<uint8_t>>();
+}
+
+TEST(LceRkPrezza, All) {
+  test_empty_constructor<rklce::lce_rk_prezza>();
+  test_simple<rklce::lce_rk_prezza>();
 }

@@ -65,7 +65,7 @@ class lce_fp {
         }
         superblock_fps[t + 1] = fingerprint;
       }
-
+#pragma omp barrier
 // Prefix sum over fingerprints of superblocks.
 #pragma omp single
       {

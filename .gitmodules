@@ -10,3 +10,6 @@
 [submodule "extlib/modular_arithmetic"]
 	path = extlib/modular_arithmetic
 	url = https://github.com/hurchalla/modular_arithmetic
+[submodule "extlib/rk-lce"]
+	path = extlib/rk-lce
+	url = https://github.com/nicolaprezza/rk-lce/
