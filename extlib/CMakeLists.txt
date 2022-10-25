@@ -13,6 +13,14 @@ add_library(malloc_count malloc_count/malloc_count.c)
 target_include_directories(malloc_count PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(malloc_count ${CMAKE_DL_LIBS})
 
+add_library(libsais libsais/src/libsais.c)
+target_include_directories(libsais PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/libsais ${CMAKE_CURRENT_SOURCE_DIR}/libsais/src)
+
+add_library(libsais64 libsais/src/libsais64.c)
+target_include_directories(libsais64 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/libsais ${CMAKE_CURRENT_SOURCE_DIR}/libsais/src)
+
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/modular_arithmetic)
 #add_library(hurchalla_modular_arithmetic hurchalla_modular_arithmetic)
 
+add_library(parallel-hashmap INTERFACE)
+target_include_directories(parallel-hashmap INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/parallel-hashmap/)

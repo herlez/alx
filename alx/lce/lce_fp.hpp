@@ -30,7 +30,8 @@ class lce_fp {
       : m_block_fps(reinterpret_cast<uint64_t*>(text)),
         m_size(size),
         m_size_in_blocks(1 + (size - 1) / 8) {
-    assert(text.size() % 8 == 0);
+    assert(size % 8 == 0);
+    assert(sizeof(t_char_type) == 1);
     std::vector<uint64_t> superblock_fps;
 // Partition text for threads in superblocks.
 #pragma omp parallel

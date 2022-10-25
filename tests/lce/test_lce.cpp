@@ -177,6 +177,30 @@ TEST(LceNaiveWordwise, All) {
   test_variants<alx::lce::lce_naive_wordwise<__uint128_t>>();
 }
 
+TEST(LceSss, All) {
+  test_empty_constructor<alx::lce::lce_sss<unsigned char>>();
+  test_simple<alx::lce::lce_sss<unsigned char>>();
+  test_simple<alx::lce::lce_sss<char>>();
+  test_simple<alx::lce::lce_sss<uint8_t>>();
+
+  test_variants<alx::lce::lce_sss<unsigned char>>();
+  test_variants<alx::lce::lce_sss<char>>();
+  test_variants<alx::lce::lce_sss<uint8_t>>();
+
+}
+
+/*TEST(LceSssNoSort, All) {
+  test_empty_constructor<alx::lce::lce_sss_no_sort<unsigned char>>();
+  test_simple<alx::lce::lce_sss_no_sort<unsigned char>>();
+  test_simple<alx::lce::lce_sss_no_sort<char>>();
+  test_simple<alx::lce::lce_sss_no_sort<uint8_t>>();
+
+  test_variants<alx::lce::lce_sss_no_sort<unsigned char>>();
+  test_variants<alx::lce::lce_sss_no_sort<char>>();
+  test_variants<alx::lce::lce_sss_no_sort<uint8_t>>();
+
+  }*/
+
 TEST(LceMemcmp, SS) {
   test_empty_constructor<alx::lce::lce_memcmp>();
   test_suffix_sorting<alx::lce::lce_memcmp>();

@@ -13,3 +13,9 @@
 [submodule "extlib/rk-lce"]
 	path = extlib/rk-lce
 	url = https://github.com/nicolaprezza/rk-lce/
+[submodule "extlib/libsais"]
+	path = extlib/libsais
+	url = https://github.com/IlyaGrebnov/libsais
+[submodule "extlib/parallel-hashmap"]
+	path = extlib/parallel-hashmap
+	url = https://github.com/greg7mdp/parallel-hashmap

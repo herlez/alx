@@ -3,6 +3,8 @@ project(alx)
 
 set(CMAKE_CXX_STANDARD 20)
 
+find_package(OpenMP)
+
 # GoogleTest
 include(FetchContent)
 FetchContent_Declare(

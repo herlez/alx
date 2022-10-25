@@ -8,3 +8,10 @@ target_link_libraries(alx_modular_arithmetic INTERFACE hurchalla_modular_arithme
 add_library(alx_rolling_hash INTERFACE)
 target_include_directories(alx_rolling_hash INTERFACE ${ALX_INCLUDE_DIR})
 target_link_libraries(alx_rolling_hash INTERFACE alx_modular_arithmetic alx_mersenne_modular_arithmetic)
+
+add_library(alx_ring_buffer INTERFACE)
+target_include_directories(alx_ring_buffer INTERFACE ${ALX_INCLUDE_DIR})
+
+add_library(alx_string_synchronizing_set INTERFACE)
+target_include_directories(alx_string_synchronizing_set INTERFACE ${ALX_INCLUDE_DIR})
+target_link_libraries(alx_string_synchronizing_set INTERFACE alx_ring_buffer alx_rolling_hash OpenMP::OpenMP_CXX parallel-hashmap)
