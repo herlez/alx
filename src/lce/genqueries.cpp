@@ -1,5 +1,5 @@
 /*******************************************************************************
- * benchmark/genqueries.cpp
+ * src/lce/genqueries.cpp
  *
  * Copyright (C) 2022 Patrick Dinklage <patrick.dinklage@tu-dortmund.de>
  *

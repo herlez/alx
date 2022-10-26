@@ -1,6 +1,7 @@
 /*******************************************************************************
- * alx/pred/binsearch_std.hpp
+ * alx/pred/pgm_index.hpp
  *
+ * Copyright (C) 2022 Patrick Dinklage <patrick.dinklage@tu-dortmund.de>
  * Copyright (C) 2022 Alexander Herlez <alexander.herlez@tu-dortmund.de>
  *
  * All rights reserved. Published under the BSD-2 license in the LICENSE file.
@@ -8,70 +9,87 @@
 
 #pragma once
 
-#include <assert.h>
-
-#include <algorithm>
-#include <cstddef>
-#include <iterator>
-
-#include "pred_result.hpp"
+#include <pgm_index.hpp>
 
 namespace alx::pred {
-template <typename T>
-class binsearch_std {
+
+// a wrapper around the PGM index for successor queries
+template <typename T, size_t m_epsilon>
+class pgm_index {
  public:
   typedef T data_type;
-  binsearch_std() : m_data(nullptr), m_size(0), m_min(0), m_max(0) {
-  }
-
-  binsearch_std(T const* data, size_t size) : m_data(data), m_size(size) {
-    assert(std::is_sorted(data, data + size));
-    if (m_size != 0) {
-      m_min = data[0];
-      m_max = data[size - 1];
-    }
+  inline pgm_index() {
   }
 
   template <typename C>
-  binsearch_std(C const& container)
-      : binsearch_std(container.data(), container.size()) {
+  pgm_index(C const& container)
+      : pgm_index(container.begin(), container.end()) {
   }
 
-  result predecessor(T x) const {
-    if (x < m_min) {
+  inline pgm_index(T const* data, size_t size) : pgm_index(data, data + size) {
+  }
+
+  template <typename I>
+  inline pgm_index(I begin, I end)
+      : m_data(&(*begin)),
+        m_num(std::distance(begin, end)),
+        m_min(*begin),
+        m_max(*(end - 1)),
+        m_pgm(begin, end) {
+    static_assert(sizeof(T) <= 8);  // warning deep down in pgm index
+  }
+
+  pgm_index(pgm_index const&) = default;
+  pgm_index& operator=(pgm_index const&) = default;
+  pgm_index(pgm_index&&) = default;
+  pgm_index& operator=(pgm_index&&) = default;
+
+  // finds the greatest element less than OR equal to x
+  inline result predecessor(const T x) const {
+    if (x < m_min) [[unlikely]]
       return result{false, 0};
-    }
-    return result{true, predecessor_unsafe(x)};
+    // if(unlikely(x >= m_max)) return result { true, m_num-1 };
+
+    auto range = m_pgm.search(x);
+    auto lo = m_data + range.lo;
+    auto hi = m_data + range.hi;
+    return {true, static_cast<size_t>(
+                      std::distance(m_data, std::upper_bound(lo, hi, x)) - 1)};
+    // nb: the PGM index returns the interval that would contain x if it
+    // were contained the predecessor and successor may thus be the items
+    // just outside the interval!
+    /*if(range.lo) --range.lo;
+    if(range.hi+1) ++range.hi;
+    return base_t::predecessor_seeded(x, range.lo, range.hi);*/
   }
 
-  size_t predecessor_unsafe(T x) const {
-    assert(x >= m_min);
-    return std::distance(m_data, std::upper_bound(m_data, m_data + m_size, x)) -
-           1;
-  }
-
-  result successor(T x) const {
-    if (x > m_max) {
+  // finds the smallest element greater than OR equal to x
+  inline result successor(const T x) const {
+    // if(unlikely(x <= m_min)) return result { true, 0 };
+    if (x > m_max) [[unlikely]]
       return result{false, 0};
-    }
-    return result{true, successor_unsafe(x)};
-  }
 
-  size_t successor_unsafe(T x) const {
-    assert(x <= m_max);
-    return std::distance(m_data, std::lower_bound(m_data, m_data + m_size, x));
-  }
+    auto range = m_pgm.search(x);
+    auto lo = m_data + range.lo;
+    auto hi = m_data + range.hi;
+    return {true, static_cast<size_t>(
+                      std::distance(m_data, std::lower_bound(lo, hi, x)))};
 
-  bool contains(T x) const {
-    auto const it = std::lower_bound(m_data, m_data + m_size, x);
-    return (it != m_data + m_size) && (*it == x);
+    // nb: the PGM index returns the interval that would contain x if it
+    // were contained the predecessor and successor may thus be the items
+    // just outside the interval!
+    /*if(range.lo) --range.lo;
+    if(range.hi+1) ++range.hi;
+    return base_t::successor_seeded(x, range.lo, range.hi);*/
   }
 
  private:
-  T const* m_data = nullptr;
-  size_t m_size = 0;
-  T m_min = 0;
-  T m_max = 0;
+  const T* m_data;
+  size_t m_num;
+  T m_min;
+  T m_max;
+
+  pgm::PGMIndex<T, m_epsilon> m_pgm;
 };
 
-};  // namespace alx::pred
+}  // namespace alx::pred

@@ -15,3 +15,6 @@ target_link_libraries(alx INTERFACE alx_pred)
 
 add_subdirectory(suffix_sort)
 target_link_libraries(alx INTERFACE alx_suffix_sort)
+
+add_subdirectory(util)
+target_link_libraries(alx INTERFACE alx_util)

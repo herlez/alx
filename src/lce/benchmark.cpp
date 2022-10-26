@@ -21,6 +21,7 @@
 #include <string>
 #include <tlx/cmdline_parser.hpp>
 #include <vector>
+#include <omp.h>
 
 #include "lce/lce_fp.hpp"
 #include "lce/lce_naive.hpp"
@@ -75,7 +76,7 @@ class benchmark {
       }
     }
 
-    // Check algorithm flag
+    // Check algorithm
     if (std::find(algorithms.begin(), algorithms.end(), algorithm) ==
         algorithms.end()) {
       fmt::print("Algorithm {} is not specified.\n Use one of {}\n", algorithm,
@@ -210,8 +211,8 @@ int main(int argc, char** argv) {
 
   cp.add_string(
       'a', "algorithm", b.algorithm,
-      fmt::format("LCE data structure that is computed: {}", algorithms));
-
+      fmt::format("Name of data structure which is benchmarked. Options: {}",
+                  algorithms));
   if (!cp.process(argc, argv)) {
     std::exit(EXIT_FAILURE);
   }

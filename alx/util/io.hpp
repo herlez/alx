@@ -37,4 +37,16 @@ std::vector<t_char_type> load_vector(
   return vec;
 }
 
+template <typename C>
+void write_vector(fs::path file_path, C container,
+                  size_t prefix_size = std::numeric_limits<size_t>::max()) {
+
+  prefix_size = std::min(prefix_size, container.size());
+  size_t bytes_to_write = prefix_size * sizeof(typename C::value_type);
+
+
+  std::ofstream stream(file_path, std::ios::out | std::ios::binary);
+  stream.write((char*)container.data(), bytes_to_write);
+}
+
 }  // namespace alx::util

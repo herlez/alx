@@ -24,3 +24,7 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/modular_arithmetic)
 
 add_library(parallel-hashmap INTERFACE)
 target_include_directories(parallel-hashmap INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/parallel-hashmap/)
+
+add_library(pgm INTERFACE)
+target_link_directories(pgm INTERFACE  OpenMP::OpenMP_CXX)
+target_include_directories(pgm INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/PGM-index/include/pgm)

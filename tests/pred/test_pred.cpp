@@ -12,8 +12,9 @@
 #include <numeric>
 
 #include "pred/binsearch_std.hpp"
-#include "pred/pred_index.hpp"
 #include "pred/j_index.hpp"
+#include "pred/pgm_index.hpp"
+#include "pred/pred_index.hpp"
 
 template <typename pred_ds_type>
 void test_empty_constructor() {
@@ -161,7 +162,7 @@ TEST(PredIndex, Safe) {
   test_simple_safe<alx::pred::pred_index<uint32_t, 7, uint32_t>>();
 }
 
-TEST(JIndex, All) {
+TEST(JIndex, Safe) {
   test_empty_constructor<alx::pred::j_index<uint64_t>>();
   test_simple_safe<alx::pred::j_index<unsigned char>>();
   test_simple_safe<alx::pred::j_index<uint8_t>>();
@@ -170,4 +171,15 @@ TEST(JIndex, All) {
   test_simple_safe<alx::pred::j_index<uint64_t>>();
   test_simple_safe<alx::pred::j_index<int64_t>>();
   test_simple_safe<alx::pred::j_index<__uint128_t>>();
+}
+
+TEST(PGMIndex, Safe) {
+  test_empty_constructor<alx::pred::pgm_index<uint64_t, 32>>();
+  test_simple_safe<alx::pred::pgm_index<unsigned char, 32>>();
+  test_simple_safe<alx::pred::pgm_index<uint8_t, 32>>();
+  test_simple_safe<alx::pred::pgm_index<uint32_t, 32>>();
+  test_simple_safe<alx::pred::pgm_index<int32_t, 32>>();
+  test_simple_safe<alx::pred::pgm_index<uint64_t, 32>>();
+  test_simple_safe<alx::pred::pgm_index<int64_t, 32>>();
+  //test_simple_safe<alx::pred::pgm_index<__uint128_t, 32>>();
 }

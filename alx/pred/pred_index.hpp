@@ -30,7 +30,7 @@ class pred_index {
       : pred_index(container.data(), container.size()) {
   }
 
-  inline pred_index(T* const data, size_t size)
+  inline pred_index(T const* data, size_t size)
       : m_data(data), m_size(size), m_min(data[0]), m_max(data[size - 1]) {
     assert(std::is_sorted(m_data, m_data + size));
 
