@@ -167,7 +167,8 @@ size_t period(char_t* text_p, size_t n, size_t period_up_to) {
 
 TEST(StringSynchronizingSet, NonRepetetiveSmall) {
   std::string text =
-      "Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum ";
+      "Lorem ipsum dolor sit amet, Lorem ipsum dolor sit amet, Lorem ipsum "
+      "dolor sit amet, ";
   {
     alx::rolling_hash::sss<uint32_t, 2> sss(text);
     fmt::print("sss_size={} (approx {})\n", sss.size(),

@@ -16,8 +16,8 @@
 #include "lce/lce_naive.hpp"
 #include "lce/lce_naive_std.hpp"
 #include "lce/lce_naive_wordwise.hpp"
-#include "lce/lce_sss.hpp"
 #include "lce/lce_rk_prezza.hpp"
+#include "lce/lce_sss.hpp"
 
 template <typename lce_ds_type>
 void test_empty_constructor() {
@@ -178,15 +178,14 @@ TEST(LceNaiveWordwise, All) {
 }
 
 TEST(LceSss, All) {
-  test_empty_constructor<alx::lce::lce_sss<unsigned char>>();
-  test_simple<alx::lce::lce_sss<unsigned char>>();
-  test_simple<alx::lce::lce_sss<char>>();
-  test_simple<alx::lce::lce_sss<uint8_t>>();
+  test_empty_constructor<alx::lce::lce_sss<unsigned char, 16>>();
+  test_simple<alx::lce::lce_sss<unsigned char, 16>>();
+  test_simple<alx::lce::lce_sss<char, 16>>();
+  test_simple<alx::lce::lce_sss<uint8_t, 16>>();
 
-  test_variants<alx::lce::lce_sss<unsigned char>>();
-  test_variants<alx::lce::lce_sss<char>>();
-  test_variants<alx::lce::lce_sss<uint8_t>>();
-
+  test_variants<alx::lce::lce_sss<unsigned char, 16>>();
+  test_variants<alx::lce::lce_sss<char, 16>>();
+  test_variants<alx::lce::lce_sss<uint8_t, 16>>();
 }
 
 /*TEST(LceSssNoSort, All) {
@@ -198,7 +197,6 @@ TEST(LceSss, All) {
   test_variants<alx::lce::lce_sss_no_sort<unsigned char>>();
   test_variants<alx::lce::lce_sss_no_sort<char>>();
   test_variants<alx::lce::lce_sss_no_sort<uint8_t>>();
-
   }*/
 
 TEST(LceMemcmp, SS) {

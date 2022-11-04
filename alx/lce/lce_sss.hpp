@@ -99,22 +99,26 @@ class lce_sss {
 
   // Return the number of common letters in text[i..] and text[j..].
   size_t lce(size_t i, size_t j) const {
-    if (i == j) [[unlikely]] {
+    /*if (i == j) [[unlikely]] {
       assert(i < m_size);
       return m_size - i;
     }
     return lce_uneq(i, j);
+    */
+    return 0;
   }
 
   // Return the number of common letters in text[i..] and text[j..]. Here i
   // and j must be different.
   size_t lce_uneq(size_t i, size_t j) const {
+    /*
     assert(i != j);
-
+    
     size_t l = std::min(i, j);
     size_t r = std::max(i, j);
 
-    return lce_lr(l, r);
+    return lce_lr(l, r);*/
+    return 0;
   }
 
   // Return the number of common letters in text[i..] and text[j..].

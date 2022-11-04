@@ -28,6 +28,7 @@ class sss {
 
   template <typename t_char_type>
   sss(t_char_type const* text, size_t size) {
+    assert(size > 5 * t_tau);
     std::vector<std::vector<t_index>> sss_part(omp_get_max_threads());
 #pragma omp parallel
     {
@@ -235,7 +236,7 @@ class sss {
                                                        size_t size,
                                                        const size_t from,
                                                        const size_t to) {
-    std::vector<std::pair<t_index, t_index>> qset{}; //inclusive intervals
+    std::vector<std::pair<t_index, t_index>> qset{};  // inclusive intervals
     constexpr size_t small_tau = t_tau / 4;
 
     rk_prime rk(small_tau, 296819);
@@ -280,7 +281,7 @@ class sss {
         }
 
         // extend run naivly to the right
-        size_t run_end = next_min; //inclusive
+        size_t run_end = next_min;  // inclusive
         while (run_end < to + 2 * t_tau - 2 &&
                text[run_end + 1] == text[run_end - period + 1]) {
           ++run_end;
@@ -293,10 +294,10 @@ class sss {
 
           if (run_end - run_start + 1 >= 3 * t_tau - 1) {
             if (run_start == 0) {
-              continue; // Run starts at 0, no run information needed
-            }  
+              continue;  // Run starts at 0, no run information needed
+            }
             if (text[run_start - 1] == text[run_start + period - 1]) {
-              continue; // Run starts at previous PE, we are not responsible
+              continue;  // Run starts at previous PE, we are not responsible
             }
 
             while (run_end < size - 1 &&
