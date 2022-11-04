@@ -83,7 +83,8 @@ bool check_string_synchronizing_set(text_t const& text, sss_t const& sss_ds) {
                   << right_in_sss << "\n";
         return false;
       }
-      if (left_in_sss && right_in_sss) {
+      if ((static_cast<size_t>(lcp[i]) >= 3 * tau) && left_in_sss &&
+          right_in_sss) {
         size_t pos_in_sss_i = pred.predecessor(sa[i - 1]).pos;
         size_t pos_in_sss_j = pred.predecessor(sa[i]).pos;
         if (sss[pos_in_sss_i] != sa[i - 1]) {

@@ -58,14 +58,18 @@ class rk_prime {
   // window and the character that is rolled in the window.
   inline uint128_t roll(unsigned char out, unsigned char in) {
     m_fp *= m_base;
-    m_fp =
-        mersenne::mod<uint128_t, m_prime>(m_fp + m_char_influence[out][in]);
+    m_fp = mersenne::mod<uint128_t, m_prime>(m_fp + m_char_influence[out][in]);
     return m_fp;
   }
 
   // Return the prime number used for the rolling hash function.
-  inline uint128_t get_prime() const {
+  inline constexpr uint128_t get_prime() const {
     return m_prime;
+  }
+
+  // Return the prime exponent used for the rolling hash function.
+  inline constexpr uint128_t get_prime_exp() const {
+    return t_prime_exp;
   }
 
   // Return the fingerprint of the current window.

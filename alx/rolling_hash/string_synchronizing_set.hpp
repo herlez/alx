@@ -112,19 +112,29 @@ class sss {
     std::vector<uint128_t> fps;
 
     rk_prime rk(t_tau, 296819);
+    rk_prime rk3(3 * t_tau, 296819);
+
     for (size_t i = 0; i < t_tau; ++i) {
       rk.roll_in(text[from + i]);
+    }
+    for (size_t i = 0; i < 3 * t_tau; ++i) {
+      rk3.roll_in(text[from + i]);
     }
 
     ring_buffer<uint128_t> fingerprints(4 * t_tau);
     fingerprints.resize(from);
     fingerprints.push_back(rk.get_fp());
-    t_index first_min = 0;
+
+    ring_buffer<uint128_t> fingerprints3(4 * t_tau);
+    fingerprints3.resize(from);
+    fingerprints3.push_back(rk3.get_fp());
 
     // Loop:
+    t_index first_min = 0;
     for (size_t i = from; i < to; ++i) {
-      for (size_t j = fingerprints.size(); j <= i + t_tau; ++j) {
+      for (size_t j = fingerprints.size(); j <= i + 3 * t_tau; ++j) {
         fingerprints.push_back(rk.roll(text[j - 1], text[j + t_tau - 1]));
+        fingerprints3.push_back(rk3.roll(text[j - 1], text[j + 3 * t_tau - 1]));
       }
 
       if (first_min == 0 || first_min < i) {
@@ -142,7 +152,7 @@ class sss {
           fingerprints[first_min] == fingerprints[i + t_tau]) {
         sss.push_back(i);
         if (m_fps_calculated) {
-          fps.push_back(fingerprints[i]);
+          fps.push_back(fingerprints3[i]);
         }
       }
     }
@@ -178,13 +188,21 @@ class sss {
     std::vector<uint128_t> fps;
 
     rk_prime rk(t_tau, 296819);
+    rk_prime rk3(3 * t_tau, 296819);
     for (size_t i = 0; i < t_tau; ++i) {
       rk.roll_in(text[from + i]);
+    }
+    for (size_t i = 0; i < 3 * t_tau; ++i) {
+      rk3.roll_in(text[from + i]);
     }
 
     ring_buffer<uint128_t> fingerprints(4 * t_tau);
     fingerprints.resize(from);
     fingerprints.push_back(rk.get_fp());
+
+    ring_buffer<uint128_t> fingerprints3(4 * t_tau);
+    fingerprints3.resize(from);
+    fingerprints3.push_back(rk3.get_fp());
 
     t_index MIN_UNKNOWN = std::numeric_limits<t_index>::max();
     t_index first_min = MIN_UNKNOWN;
@@ -192,6 +210,7 @@ class sss {
     for (size_t i = from; i < to; ++i) {
       for (size_t j = fingerprints.size(); j <= i + t_tau; ++j) {
         fingerprints.push_back(rk.roll(text[j - 1], text[j + t_tau - 1]));
+        fingerprints3.push_back(rk3.roll(text[j - 1], text[j + 3 * t_tau - 1]));
       }
       while (it_q->second < i) {
         std::advance(it_q, 1);
@@ -245,7 +264,7 @@ class sss {
           fingerprints[first_min] == fingerprints[i + t_tau]) {
         sss.push_back(i);
         if (m_fps_calculated) {
-          fps.push_back(fingerprints[i]);
+          fps.push_back(fingerprints3[i]);
         }
       }
     }

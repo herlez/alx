@@ -29,13 +29,14 @@
 #include "lce/lce_naive_wordwise.hpp"
 #include "lce/lce_rk_prezza.hpp"
 #include "util/io.hpp"
+#include "lce/lce_sss_naive.hpp"
 #include "util/timer.hpp"
 
 namespace fs = std::filesystem;
 
 std::vector<std::string> algorithms{
     "all",  "naive", "naive_std", "naive_wordwise", "fp8",   "fp16",
-    "fp32", "fp64",  "fp128",     "fp256",          "fp512", "rk-prezza"};
+    "fp32", "fp64",  "fp128",     "fp256",          "fp512", "rk-prezza", "sss_naive"};
 
 class benchmark {
  public:
@@ -113,11 +114,11 @@ class benchmark {
     return lce_ds;
   }
 
-  void load_queries() {
+  void load_queries(size_t lce_cur) {
     alx::util::timer t;
     // First load queries from file
     fs::path cur_query_path = queries_path;
-    cur_query_path.append(fmt::format("lce_{}", lce_from));
+    cur_query_path.append(fmt::format("lce_{}", lce_cur));
     queries = alx::util::load_vector<size_t>(cur_query_path);
 
     // Now clone queries until there are num_unique_queries many
@@ -165,8 +166,8 @@ class benchmark {
     size_t lce_cur = lce_from;
     while (lce_cur < lce_to) {
       fmt::print("RESULT algo={}_queries", algo_name);
-      fmt::print(" lce_range={}", lce_from);
-      load_queries();
+      fmt::print(" lce_range={}", lce_cur);
+      load_queries(lce_cur);
       benchmark_queries<lce_ds_type>(lce_ds);
       fmt::print("\n");
       ++lce_cur;
@@ -231,6 +232,7 @@ int main(int argc, char** argv) {
   b.run<alx::lce::lce_fp<uint8_t, 256>>("fp256");
   b.run<alx::lce::lce_fp<uint8_t, 512>>("fp512");
   b.run<rklce::lce_rk_prezza>("rk-prezza");
+  b.run<alx::lce::lce_sss_naive<uint8_t, 16, uint64_t>>("sss_naive");
 
   // b.run<alx::lce::lce_sss<uint8_t, 512>>("fp512");
 }
