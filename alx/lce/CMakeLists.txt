@@ -25,9 +25,14 @@ target_include_directories(alx_lce_fp INTERFACE ${ALX_INCLUDE_DIR})
 target_link_libraries(alx_lce_fp INTERFACE alx_rolling_hash OpenMP::OpenMP_CXX)
 target_link_libraries(alx_lce INTERFACE alx_lce_fp)
 
+add_library(alx_lce_sss_naive INTERFACE)
+target_include_directories(alx_lce_sss_naive INTERFACE ${ALX_INCLUDE_DIR})
+target_link_libraries(alx_lce_sss_naive INTERFACE alx_string_synchronizing_set alx_pred_index)
+target_link_libraries(alx_lce INTERFACE alx_lce_sss)
+
 add_library(alx_lce_sss INTERFACE)
 target_include_directories(alx_lce_sss INTERFACE ${ALX_INCLUDE_DIR})
-target_link_libraries(alx_lce_sss INTERFACE alx_rolling_hash alx_string_synchronizing_set)
+target_link_libraries(alx_lce_sss INTERFACE alx_string_synchronizing_set alx_pred_index)
 target_link_libraries(alx_lce INTERFACE alx_lce_sss)
 
 

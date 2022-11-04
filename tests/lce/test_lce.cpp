@@ -18,6 +18,7 @@
 #include "lce/lce_naive_wordwise.hpp"
 #include "lce/lce_rk_prezza.hpp"
 #include "lce/lce_sss.hpp"
+#include "lce/lce_sss_naive.hpp"
 
 template <typename lce_ds_type>
 void test_empty_constructor() {
@@ -124,7 +125,7 @@ TEST(LceNaive, All) {
   test_simple<alx::lce::lce_naive<uint64_t>>();
   test_simple<alx::lce::lce_naive<int64_t>>();
   test_simple<alx::lce::lce_naive<__uint128_t>>();
-  
+
   test_variants<alx::lce::lce_naive<unsigned char>>();
   test_variants<alx::lce::lce_naive<char>>();
   test_variants<alx::lce::lce_naive<uint8_t>>();
@@ -177,15 +178,15 @@ TEST(LceNaiveWordwise, All) {
   test_variants<alx::lce::lce_naive_wordwise<__uint128_t>>();
 }
 
-TEST(LceSss, All) {
-  test_empty_constructor<alx::lce::lce_sss<unsigned char, 16>>();
-  test_simple<alx::lce::lce_sss<unsigned char, 16>>();
-  test_simple<alx::lce::lce_sss<char, 16>>();
-  test_simple<alx::lce::lce_sss<uint8_t, 16>>();
+TEST(LceSssNaive, All) {
+  test_empty_constructor<alx::lce::lce_sss_naive<unsigned char, 16>>();
+  test_simple<alx::lce::lce_sss_naive<unsigned char, 16>>();
+  test_simple<alx::lce::lce_sss_naive<char, 16>>();
+  test_simple<alx::lce::lce_sss_naive<uint8_t, 16>>();
 
-  test_variants<alx::lce::lce_sss<unsigned char, 16>>();
-  test_variants<alx::lce::lce_sss<char, 16>>();
-  test_variants<alx::lce::lce_sss<uint8_t, 16>>();
+  test_variants<alx::lce::lce_sss_naive<unsigned char, 16>>();
+  test_variants<alx::lce::lce_sss_naive<char, 16>>();
+  test_variants<alx::lce::lce_sss_naive<uint8_t, 16>>();
 }
 
 /*TEST(LceSssNoSort, All) {
@@ -198,6 +199,18 @@ TEST(LceSss, All) {
   test_variants<alx::lce::lce_sss_no_sort<char>>();
   test_variants<alx::lce::lce_sss_no_sort<uint8_t>>();
   }*/
+
+
+/*TEST(LceSss, All) {
+  test_empty_constructor<alx::lce::lce_sss<unsigned char, 16>>();
+  test_simple<alx::lce::lce_sss<unsigned char, 16>>();
+  test_simple<alx::lce::lce_sss<char, 16>>();
+  test_simple<alx::lce::lce_sss<uint8_t, 16>>();
+
+  test_variants<alx::lce::lce_sss<unsigned char, 16>>();
+  test_variants<alx::lce::lce_sss<char, 16>>();
+  test_variants<alx::lce::lce_sss<uint8_t, 16>>();
+}*/
 
 TEST(LceMemcmp, SS) {
   test_empty_constructor<alx::lce::lce_memcmp>();

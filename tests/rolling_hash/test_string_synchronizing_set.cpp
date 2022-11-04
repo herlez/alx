@@ -13,31 +13,38 @@
 
 #include <unordered_set>
 
+#include "pred/pred_index.hpp"
 #include "rolling_hash/string_synchronizing_set.hpp"
 
 __extension__ typedef unsigned __int128 uint128_t;
 
 template <typename text_t, typename sss_t>
-bool check_string_synchronizing_set(text_t const& text, sss_t const& sss) {
+bool check_string_synchronizing_set(text_t const& text, sss_t const& sss_ds) {
+  std::vector<typename sss_t::index_type> const& sss = sss_ds.get_sss();
+  std::vector<uint128_t> const& fps = sss_ds.get_fps();
+
+  alx::pred::pred_index<typename sss_t::index_type, 7,
+                        typename sss_t::index_type>
+      pred(sss);
   const size_t tau = sss_t::tau;
 
-  if (!std::is_sorted(sss.get_sss().begin(), sss.get_sss().end())) {
+  if (!std::is_sorted(sss.begin(), sss.end())) {
     fmt::print("\nStrings synchronizing set is not sorted.\n");
-    fmt::print("{}", sss.get_sss());
+    fmt::print("{}", sss);
 
     return false;
   }
 
   const size_t last_posible_sss_pos = text.size() - 2 * tau;
-  if (!sss.has_runs() && sss.get_sss().back() > last_posible_sss_pos) {
+  if (!sss_ds.has_runs() && sss.back() > last_posible_sss_pos) {
     std::cout << "\nLast string synchronizing set position is too large. "
-              << sss.get_sss().back() << ">" << last_posible_sss_pos << "\n";
+              << sss.back() << ">" << last_posible_sss_pos << "\n";
     return false;
   }
-  if (sss.has_runs() && sss.get_sss().back() != last_posible_sss_pos + 1) {
+  if (sss_ds.has_runs() && sss.back() != last_posible_sss_pos + 1) {
     std::cout
         << "\nLast string synchronizing is not included in repetitive text. "
-        << sss.get_sss().back() << ">" << last_posible_sss_pos << "\n";
+        << sss.back() << ">" << last_posible_sss_pos << "\n";
     return false;
   }
 
@@ -76,6 +83,24 @@ bool check_string_synchronizing_set(text_t const& text, sss_t const& sss) {
                   << right_in_sss << "\n";
         return false;
       }
+      if (left_in_sss && right_in_sss) {
+        size_t pos_in_sss_i = pred.predecessor(sa[i - 1]).pos;
+        size_t pos_in_sss_j = pred.predecessor(sa[i]).pos;
+        if (sss[pos_in_sss_i] != sa[i - 1]) {
+          fmt::print("{} should equal {}\n", sss[pos_in_sss_i], sa[i - 1]);
+          return false;
+        }
+        if (sss[pos_in_sss_j] != sa[i]) {
+          fmt::print("{} should equal {}\n", sss[pos_in_sss_j], sa[i]);
+          return false;
+        }
+        if (sss_ds.fps_calculated() &&
+            (fps[pos_in_sss_i] != fps[pos_in_sss_j])) {
+          fmt::print(" fingerprints should be equal: {} != {}\n",
+                     fps[pos_in_sss_i], fps[pos_in_sss_j]);
+          return false;
+        }
+      }
     }
   }
 
@@ -83,12 +108,12 @@ bool check_string_synchronizing_set(text_t const& text, sss_t const& sss) {
   // information
   for (size_t i = 0; i < sss.size() - 1; i++) {
     if (sss[i + 1] - sss[i] > tau) {
-      if (sss.get_run_info(sss[i]) == 0) {
+      if (sss_ds.get_run_info(sss[i]) == 0) {
         std::cout << "\nsss[" << i << "] should store run information.";
         return false;
       }
     } else {
-      if (sss.get_run_info(sss[i] != 0)) {
+      if (sss_ds.get_run_info(sss[i] != 0)) {
         std::cout << "\nsss[" << i << "] should NOT store run information.";
       }
     }
@@ -97,12 +122,12 @@ bool check_string_synchronizing_set(text_t const& text, sss_t const& sss) {
   // Now assert that run information is rising.
   int64_t last_run_pos;
   int64_t last_run_info;
-  if (sa[0] == 0 || sss.get_run_info(sa[0] - 1) == 0) {
+  if (sa[0] == 0 || sss_ds.get_run_info(sa[0] - 1) == 0) {
     last_run_pos = -1;
     last_run_info = std::numeric_limits<int64_t>::min();
   } else {
     last_run_pos = 0;
-    last_run_info = sss.get_run_info(sa[0] - 1);
+    last_run_info = sss_ds.get_run_info(sa[0] - 1);
   }
 
   for (size_t i = 1; i < sa.size(); i++) {
@@ -111,12 +136,12 @@ bool check_string_synchronizing_set(text_t const& text, sss_t const& sss) {
       if (sa[i] == 0) {
         continue;
       }
-      if (sss.get_run_info(sa[i] - 1) ==
+      if (sss_ds.get_run_info(sa[i] - 1) ==
           0) {  // sa[i]-1 not in S or sa[i]-1 does not precede run
         continue;
       }
 
-      int64_t run_info = sss.get_run_info(sa[i] - 1);
+      int64_t run_info = sss_ds.get_run_info(sa[i] - 1);
       if (run_info < last_run_info) {
         std::cout << "\nError in run information: "
                   << " sa[" << last_run_pos << "]=" << sa[last_run_pos]
@@ -170,25 +195,25 @@ TEST(StringSynchronizingSet, NonRepetetiveSmall) {
       "Lorem ipsum dolor sit amet, Lorem ipsum dolor sit amet, Lorem ipsum "
       "dolor sit amet, ";
   {
-    alx::rolling_hash::sss<uint32_t, 2> sss(text);
+    alx::rolling_hash::sss<uint32_t, 2> sss(text, true);
     fmt::print("sss_size={} (approx {})\n", sss.size(),
                text.size() * 2 / (sss.tau + 1));
     EXPECT_TRUE(check_string_synchronizing_set(text, sss));
   }
   {
-    alx::rolling_hash::sss<uint32_t, 4> sss(text);
+    alx::rolling_hash::sss<uint32_t, 4> sss(text, true);
     fmt::print("sss_size={} (approx {})\n", sss.size(),
                text.size() * 2 / (sss.tau + 1));
     EXPECT_TRUE(check_string_synchronizing_set(text, sss));
   }
   {
-    alx::rolling_hash::sss<uint32_t, 8> sss(text);
+    alx::rolling_hash::sss<uint32_t, 8> sss(text, true);
     fmt::print("sss_size={} (approx {})\n", sss.size(),
                text.size() * 2 / (sss.tau + 1));
     EXPECT_TRUE(check_string_synchronizing_set(text, sss));
   }
   {
-    alx::rolling_hash::sss<uint32_t, 16> sss(text);
+    alx::rolling_hash::sss<uint32_t, 16> sss(text, true);
     fmt::print("sss_size={} (approx {})\n", sss.size(),
                text.size() * 2 / (sss.tau + 1));
     EXPECT_TRUE(check_string_synchronizing_set(text, sss));
@@ -225,31 +250,31 @@ TEST(StringSynchronizingSet, NonRepetetive) {
       "dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus "
       "est Lorem ipsum dolor sit amet.";
   {
-    alx::rolling_hash::sss<uint32_t, 2> sss(text);
+    alx::rolling_hash::sss<uint32_t, 2> sss(text, true);
     fmt::print("sss_size={} (approx {})\n", sss.size(),
                text.size() * 2 / (sss.tau + 1));
     EXPECT_TRUE(check_string_synchronizing_set(text, sss));
   }
   {
-    alx::rolling_hash::sss<uint32_t, 4> sss(text);
+    alx::rolling_hash::sss<uint32_t, 4> sss(text, true);
     fmt::print("sss_size={} (approx {})\n", sss.size(),
                text.size() * 2 / (sss.tau + 1));
     EXPECT_TRUE(check_string_synchronizing_set(text, sss));
   }
   {
-    alx::rolling_hash::sss<uint32_t, 8> sss(text);
+    alx::rolling_hash::sss<uint32_t, 8> sss(text, true);
     fmt::print("sss_size={} (approx {})\n", sss.size(),
                text.size() * 2 / (sss.tau + 1));
     EXPECT_TRUE(check_string_synchronizing_set(text, sss));
   }
   {
-    alx::rolling_hash::sss<uint32_t, 16> sss(text);
+    alx::rolling_hash::sss<uint32_t, 16> sss(text, true);
     fmt::print("sss_size={} (approx {})\n", sss.size(),
                text.size() * 2 / (sss.tau + 1));
     EXPECT_TRUE(check_string_synchronizing_set(text, sss));
   }
   {
-    alx::rolling_hash::sss<uint32_t, 32> sss(text);
+    alx::rolling_hash::sss<uint32_t, 32> sss(text, true);
     fmt::print("sss_size={} (approx {})\n", sss.size(),
                text.size() * 2 / (sss.tau + 1));
     EXPECT_TRUE(check_string_synchronizing_set(text, sss));
@@ -314,25 +339,25 @@ TEST(StringSynchronizingSet, Repetetive) {
       "dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus "
       "est Lorem ipsum dolor sit amet.";
   {
-    alx::rolling_hash::sss<uint32_t, 2> sss(text);
+    alx::rolling_hash::sss<uint32_t, 2> sss(text, true);
     EXPECT_TRUE(check_string_synchronizing_set(text, sss));
     fmt::print("sss_size={} (approx {})\n", sss.size(),
                text.size() * 2 / (sss.tau + 1));
   }
   {
-    alx::rolling_hash::sss<uint32_t, 4> sss(text);
+    alx::rolling_hash::sss<uint32_t, 4> sss(text, true);
     EXPECT_TRUE(check_string_synchronizing_set(text, sss));
     fmt::print("sss_size={} (approx {})\n", sss.size(),
                text.size() * 2 / (sss.tau + 1));
   }
   {
-    alx::rolling_hash::sss<uint32_t, 8> sss(text);
+    alx::rolling_hash::sss<uint32_t, 8> sss(text, true);
     EXPECT_TRUE(check_string_synchronizing_set(text, sss));
     fmt::print("sss_size={} (approx {})\n", sss.size(),
                text.size() * 2 / (sss.tau + 1));
   }
   {
-    alx::rolling_hash::sss<uint32_t, 16> sss(text);
+    alx::rolling_hash::sss<uint32_t, 16> sss(text, true);
     EXPECT_TRUE(check_string_synchronizing_set(text, sss));
     fmt::print("sss_size={} (approx {})\n", sss.size(),
                text.size() * 2 / (sss.tau + 1));
@@ -342,7 +367,7 @@ TEST(StringSynchronizingSet, Repetetive) {
         << fmt::format("{} {}", sss.get_run_info(5), sss.get_run_info(2059));
   }
   {
-    alx::rolling_hash::sss<uint32_t, 32> sss(text);
+    alx::rolling_hash::sss<uint32_t, 32> sss(text, true);
     EXPECT_TRUE(check_string_synchronizing_set(text, sss));
     fmt::print("sss_size={} (approx {})\n", sss.size(),
                text.size() * 2 / (sss.tau + 1));

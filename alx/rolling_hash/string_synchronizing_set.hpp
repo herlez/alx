@@ -20,16 +20,19 @@ namespace alx::rolling_hash {
 template <typename t_index = uint32_t, uint64_t t_tau = 1024>
 class sss {
  public:
+  typedef t_index index_type;
   static constexpr uint64_t tau = t_tau;
   __extension__ typedef unsigned __int128 uint128_t;
 
-  sss() {
+  sss() : m_fps_calculated(false) {
   }
 
   template <typename t_char_type>
-  sss(t_char_type const* text, size_t size) {
+  sss(t_char_type const* text, size_t size, bool calculate_fps = false)
+      : m_fps_calculated(calculate_fps) {
     assert(size > 5 * t_tau);
     std::vector<std::vector<t_index>> sss_part(omp_get_max_threads());
+    std::vector<std::vector<uint128_t>> fps_part(omp_get_max_threads());
 #pragma omp parallel
     {
       const size_t sss_end = size - 2 * t_tau + 1;
@@ -41,7 +44,8 @@ class sss {
       const size_t begin = t * slice_size;
       const size_t end = (t < nt - 1) ? (t + 1) * slice_size : sss_end;
 
-      sss_part[t] = fill_synchronizing_set(text, begin, end);
+      std::tie(sss_part[t], fps_part[t]) =
+          fill_synchronizing_set(text, begin, end);
     }
 
     // Merge SSS parts
@@ -49,7 +53,7 @@ class sss {
     for (auto& part : sss_part) {
       write_pos.push_back(write_pos.back() + part.size());
     }
-    size_t sss_size = write_pos.back();  //+1 for sentinel
+    size_t sss_size = write_pos.back();
     m_runs_detected = sss_size > size * 4 / t_tau;
 
     // If the text contains long runs, the sss inflates. We the then use a
@@ -66,7 +70,8 @@ class sss {
         const size_t begin = t * slice_size;
         const size_t end = (t < nt - 1) ? (t + 1) * slice_size : sss_end;
 
-        sss_part[t] = fill_synchronizing_set_runs(text, size, begin, end);
+        std::tie(sss_part[t], fps_part[t]) =
+            fill_synchronizing_set_runs(text, size, begin, end);
       }
       write_pos = {0};
       for (auto& part : sss_part) {
@@ -76,24 +81,35 @@ class sss {
     }
 
     m_sss.resize(sss_size);
+    if (m_fps_calculated) {
+      m_fps.resize(sss_size);
+    }
 #pragma omp parallel
     {
       const int t = omp_get_thread_num();
       std::copy(sss_part[t].begin(), sss_part[t].end(),
                 m_sss.begin() + write_pos[t]);
+      if (m_fps_calculated) {
+        std::copy(fps_part[t].begin(), fps_part[t].end(),
+                  m_fps.begin() + write_pos[t]);
+      }
     }
     if (m_runs_detected) {
       m_sss.back() =
           size - 2 * t_tau + 1;  // sentinel needed for text with runs
+      if (m_fps_calculated) {
+        m_fps.back() = 0;
+      }
     }
   }
 
   template <typename t_char_type>
-  std::vector<t_index> fill_synchronizing_set(t_char_type const* text,
-                                              const size_t from,
-                                              const size_t to) const {
+  std::pair<std::vector<t_index>, std::vector<uint128_t>>
+  fill_synchronizing_set(t_char_type const* text, const size_t from,
+                         const size_t to) const {
     // calculate SSS
     std::vector<t_index> sss;
+    std::vector<uint128_t> fps;
 
     rk_prime rk(t_tau, 296819);
     for (size_t i = 0; i < t_tau; ++i) {
@@ -125,15 +141,17 @@ class sss {
       if (fingerprints[first_min] == fingerprints[i] ||
           fingerprints[first_min] == fingerprints[i + t_tau]) {
         sss.push_back(i);
+        if (m_fps_calculated) {
+          fps.push_back(fingerprints[i]);
+        }
       }
     }
-    return sss;
+    return {sss, fps};
   }
   template <typename t_char_type>
-  std::vector<t_index> fill_synchronizing_set_runs(const t_char_type* text,
-                                                   size_t size,
-                                                   const size_t from,
-                                                   const size_t to) {
+  std::pair<std::vector<t_index>, std::vector<uint128_t>>
+  fill_synchronizing_set_runs(const t_char_type* text, size_t size,
+                              const size_t from, const size_t to) {
     // calculate Q
     std::vector<std::pair<t_index, t_index>> qset =
         calculate_q(text, size, from, to);
@@ -157,6 +175,7 @@ class sss {
     // BEGIN
 
     std::vector<t_index> sss;
+    std::vector<uint128_t> fps;
 
     rk_prime rk(t_tau, 296819);
     for (size_t i = 0; i < t_tau; ++i) {
@@ -225,10 +244,13 @@ class sss {
       if (fingerprints[first_min] == fingerprints[i] ||
           fingerprints[first_min] == fingerprints[i + t_tau]) {
         sss.push_back(i);
+        if (m_fps_calculated) {
+          fps.push_back(fingerprints[i]);
+        }
       }
     }
 
-    return sss;
+    return {sss, fps};
   }
 
   template <typename t_char_type>
@@ -322,11 +344,21 @@ class sss {
   }
 
   template <typename C>
-  sss(C const& container) : sss(container.data(), container.size()) {
+  sss(C const& container, bool calculate_fps = false)
+      : sss(container.data(), container.size(), calculate_fps) {
+  }
+
+  bool fps_calculated() const {
+    return m_fps_calculated;
   }
 
   std::vector<t_index> const& get_sss() const {
     return m_sss;
+  }
+
+  std::vector<uint128_t> const& get_fps() const {
+    assert(m_fps_calculated);
+    return m_fps;
   }
 
   size_t num_runs() const {
@@ -351,6 +383,9 @@ class sss {
 
  private:
   std::vector<t_index> m_sss;
+  std::vector<uint128_t> m_fps;
+  bool m_fps_calculated;
+
   phmap::parallel_flat_hash_map<
       t_index, int64_t, phmap::priv::hash_default_hash<t_index>,
       phmap::priv::hash_default_eq<t_index>,

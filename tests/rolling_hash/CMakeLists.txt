@@ -16,6 +16,7 @@ target_link_libraries(
   test_string_synchronizing_set
   GTest::gtest_main
   alx_string_synchronizing_set
+  alx_pred_index
   libsais
   fmt::fmt-header-only
 )
