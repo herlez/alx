@@ -11,6 +11,7 @@
 #include <limits>
 #include <numeric>
 
+#include "lce/lce_classic.hpp"
 #include "lce/lce_fp.hpp"
 #include "lce/lce_memcmp.hpp"
 #include "lce/lce_naive.hpp"
@@ -54,6 +55,43 @@ void test_simple() {
 }
 
 template <typename lce_ds_type>
+void test_simple_terminated() {
+  typedef typename lce_ds_type::char_type char_typee;
+  std::vector<char_typee> text(2000);
+  std::iota(text.begin(), text.begin() + 1000,
+            std::numeric_limits<char_typee>::max() / 2);
+  std::iota(text.begin() + 1000, text.end(),
+            std::numeric_limits<char_typee>::max() / 2);
+
+  for (auto& c : text) {
+    if (c == 0) {
+      c++;
+    }
+  }
+  text.front() = 0;
+  text.push_back(0);
+
+  std::vector<char_typee> text_copy = text;
+  // Test pointer constructor
+  {
+    lce_ds_type ds(text.data(), text.size());
+    EXPECT_EQ(ds.lce(0, 0), 2001);
+    EXPECT_EQ(ds.lce(1, 1001), 999);
+    EXPECT_EQ(ds.lce(500, 1000), 0);
+  }
+  text = text_copy;
+
+  // Test container constructor
+  {
+    lce_ds_type ds(text);
+    EXPECT_EQ(ds.lce(0, 0), 2001);
+    EXPECT_EQ(ds.lce(1, 1001), 999);
+    EXPECT_EQ(ds.lce(500, 1000), 0);
+  }
+  text = text_copy;
+}
+
+template <typename lce_ds_type>
 void test_suffix_sorting() {
   typedef typename lce_ds_type::char_type char_typee;
   std::vector<char_typee> text(200);
@@ -90,8 +128,41 @@ void test_variants() {
   EXPECT_EQ(ds.is_leq_suffix(0, 50), true);
   EXPECT_EQ(ds.is_leq_suffix(50, 0), false);
 
-  EXPECT_EQ(ds.lce_up_to(100, 0, 20), std::make_pair(false, size_t{20}));
-  EXPECT_EQ(ds.lce_up_to(100, 50, 20), std::make_pair(true, size_t{0}));
+  EXPECT_EQ(ds.lce_up_to(100, 0, 20), size_t{20});
+  EXPECT_EQ(ds.lce_up_to(100, 50, 20), size_t{0});
+}
+
+template <typename lce_ds_type>
+void test_variants_terminated() {
+  typedef typename lce_ds_type::char_type char_typee;
+  std::vector<char_typee> text(200);
+  std::iota(text.begin(), text.begin() + 100,
+            std::numeric_limits<char_typee>::max() / 2);
+  std::iota(text.begin() + 100, text.end(),
+            std::numeric_limits<char_typee>::max() / 2);
+
+  for (auto& c : text) {
+    if (c == 0) {
+      c++;
+    }
+  }
+  text.front() = 0;
+  text.push_back(0);
+
+  lce_ds_type ds(text);
+  EXPECT_EQ(ds.lce_lr(1, 101), 99);
+  EXPECT_EQ(ds.lce(50, 100), 0);
+
+  EXPECT_EQ(ds.lce_mismatch(200, 0), std::make_pair(false, size_t{1}));
+  EXPECT_EQ(ds.lce_mismatch(100, 50), std::make_pair(true, size_t{0}));
+
+  EXPECT_EQ(ds.is_leq_suffix(50, 150), false);
+  EXPECT_EQ(ds.is_leq_suffix(150, 50), true);
+  EXPECT_EQ(ds.is_leq_suffix(1, 51), true);
+  EXPECT_EQ(ds.is_leq_suffix(51, 1), false);
+
+  EXPECT_EQ(ds.lce_up_to(101, 1, 20), size_t{20});
+  EXPECT_EQ(ds.lce_up_to(101, 51, 20), size_t{0});
 }
 
 template <typename lce_ds_type>
@@ -178,6 +249,21 @@ TEST(LceNaiveWordwise, All) {
   test_variants<alx::lce::lce_naive_wordwise<__uint128_t>>();
 }
 
+TEST(LceClassic, All) {
+  test_empty_constructor<alx::lce::lce_classic<unsigned char>>();
+
+  test_simple_terminated<alx::lce::lce_classic<unsigned char>>();
+  test_simple_terminated<alx::lce::lce_classic<uint8_t>>();
+  test_simple_terminated<alx::lce::lce_classic<uint32_t>>();
+  test_simple_terminated<alx::lce::lce_classic<uint64_t>>();
+  test_simple_terminated<alx::lce::lce_classic<__uint128_t>>();
+
+  test_variants_terminated<alx::lce::lce_classic<uint8_t>>();
+  test_variants_terminated<alx::lce::lce_classic<uint32_t>>();
+  test_variants_terminated<alx::lce::lce_classic<uint64_t>>();
+  test_variants_terminated<alx::lce::lce_classic<__uint128_t>>();
+}
+
 TEST(LceSssNaive, All) {
   test_empty_constructor<alx::lce::lce_sss_naive<unsigned char, 16>>();
   test_simple<alx::lce::lce_sss_naive<unsigned char, 16>>();
@@ -199,7 +285,6 @@ TEST(LceSssNaive, All) {
   test_variants<alx::lce::lce_sss_no_sort<char>>();
   test_variants<alx::lce::lce_sss_no_sort<uint8_t>>();
   }*/
-
 
 /*TEST(LceSss, All) {
   test_empty_constructor<alx::lce::lce_sss<unsigned char, 16>>();

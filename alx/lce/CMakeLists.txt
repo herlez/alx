@@ -35,6 +35,15 @@ target_include_directories(alx_lce_sss INTERFACE ${ALX_INCLUDE_DIR})
 target_link_libraries(alx_lce_sss INTERFACE alx_string_synchronizing_set alx_pred_index)
 target_link_libraries(alx_lce INTERFACE alx_lce_sss)
 
+add_library(alx_lce_classic INTERFACE)
+target_include_directories(alx_lce_classic INTERFACE ${ALX_INCLUDE_DIR})
+target_link_libraries(alx_lce_classic INTERFACE gsaca_ds libsais alx_rmq)
+target_link_libraries(alx_lce INTERFACE alx_lce_classic)
+
+#add_library(alx_lce_noss INTERFACE)
+#target_include_directories(alx_lce_noss INTERFACE ${ALX_INCLUDE_DIR})
+#target_link_libraries(alx_lce_sss INTERFACE alx_string_synchronizing_set alx_pred_index)
+#target_link_libraries(alx_lce INTERFACE alx_lce_sss)
 
 
 #TODO: 

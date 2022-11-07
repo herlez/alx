@@ -207,10 +207,10 @@ class lce_sss {
 
   // Return {b, lce}, where lce is the lce of text[i..i+lce) and
   // text[j..j+lce] and b tells whether the lce ends with a mismatch.
-  std::pair<bool, size_t> lce_up_to(size_t i, size_t j, size_t up_to) {
+  size_t lce_up_to(size_t i, size_t j, size_t up_to) {
     if (i == j) [[unlikely]] {
       assert(i < m_size);
-      return {false, m_size - i};
+      return m_size - i;
     }
 
     size_t l = std::min(i, j);
@@ -218,7 +218,7 @@ class lce_sss {
 
     size_t lce_max = std::min(r + up_to, m_size) - r;
     size_t lce = lce_lr(l, r);  // doesnt work that easy
-    return {lce < lce_max, lce};
+    return lce;
   }
 
   char_type operator[](size_t i) {

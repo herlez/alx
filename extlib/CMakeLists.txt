@@ -26,5 +26,17 @@ add_library(parallel-hashmap INTERFACE)
 target_include_directories(parallel-hashmap INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/parallel-hashmap/)
 
 add_library(pgm INTERFACE)
-target_link_directories(pgm INTERFACE  OpenMP::OpenMP_CXX)
+target_link_libraries(pgm INTERFACE  OpenMP::OpenMP_CXX)
 target_include_directories(pgm INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/PGM-index/include/pgm)
+
+add_library(ips4o INTERFACE)
+target_include_directories(ips4o INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/ips4o)
+target_link_libraries(ips4o INTERFACE)
+
+add_library(gsaca_ds INTERFACE)
+target_link_libraries(gsaca_ds INTERFACE OpenMP::OpenMP_CXX ips4o -latomic)
+target_include_directories(gsaca_ds INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/gsaca-double-sort)
+
+#set(DISABLE_IPS4O_PARALLEL TRUE)
+#add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ips4o)
+

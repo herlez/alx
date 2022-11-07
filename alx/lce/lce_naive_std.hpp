@@ -59,9 +59,8 @@ class lce_naive_std {
     return is_leq_suffix(m_text, m_size, i, j);
   }
 
-  // Return {b, lce}, where lce is the lce of text[i..i+lce) and text[j..j+lce]
-  // and b tells whether the lce ends with a mismatch.
-  std::pair<bool, size_t> lce_up_to(size_t i, size_t j, size_t up_to) const {
+  // Return the lce of text[i..i+lce) and text[j..j+lce]
+  size_t lce_up_to(size_t i, size_t j, size_t up_to) const {
     return lce_up_to(m_text, m_size, i, j, up_to);
   }
 
@@ -115,16 +114,16 @@ class lce_naive_std {
                             size_t j) {
     assert(i != j);
     size_t lce_val = lce_uneq(text, size, i, j);
-    return (i + lce_val == size || ((j + lce_val != size) && text[i + lce_val] < text[j + lce_val]));
+    return (i + lce_val == size ||
+            ((j + lce_val != size) && text[i + lce_val] < text[j + lce_val]));
   }
 
-  // Return {b, lce}, where lce is the lce of text[i..i+lce) and text[j..j+lce]
-  // and b tells whether the lce ends with a mismatch.
-  static std::pair<bool, size_t> lce_up_to(char_type const* text, size_t size,
-                                           size_t i, size_t j, size_t up_to) {
+  // Return the lce of text[i..i+lce) and text[j..j+lce]
+  static size_t lce_up_to(char_type const* text, size_t size, size_t i,
+                          size_t j, size_t up_to) {
     if (i == j) [[unlikely]] {
       assert(i < size);
-      return {false, size - i};
+      size - i;
     }
 
     size_t l = std::min(i, j);
@@ -132,7 +131,7 @@ class lce_naive_std {
 
     size_t lce_max = std::min(r + up_to, size) - r;
     size_t lce = lce_lr(text, r + lce_max, l, r);
-    return {lce < lce_max, lce};
+    return lce;
   }
 
  private:

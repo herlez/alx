@@ -281,12 +281,11 @@ class lce_fp {
                ((std::countl_zero(comp_block_i ^ comp_block_j)) / 8), max_stub);
   }
 
-  // Return {b, lce}, where lce is the lce of text[i..i+lce) and text[j..j+lce]
-  // and b tells whether the lce ends with a mismatch.
-  std::pair<bool, size_t> lce_up_to(size_t i, size_t j, size_t up_to) const {
+  // Return the lce of text[i..i+lce) and text[j..j+lce]
+  size_t lce_up_to(size_t i, size_t j, size_t up_to) const {
     if (i == j) [[unlikely]] {
       assert(i < m_size);
-      return {false, m_size - i};
+      m_size - i;
     }
 
     size_t l = std::min(i, j);
@@ -295,7 +294,7 @@ class lce_fp {
     uint64_t max_lce = std::min(m_size - r, up_to);
     uint64_t lce = lce_scan(l, r, max_lce);
     if (lce < t_naive_scan) {
-      return {lce < max_lce, lce};
+      return lce;
     }
     // Exponential search
     uint64_t dist = t_naive_scan * 2;
@@ -326,7 +325,7 @@ class lce_fp {
     max_lce -= add;
     lce = add + lce_scan_to_end(l + add, r + add, max_lce);
 
-    return {lce < max_lce, lce};
+    return lce;
   }
 
  private:

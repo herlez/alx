@@ -1,5 +1,5 @@
 /*******************************************************************************
- * alx/lce/lce_sss_naive.hpp
+ * alx/lce/lce_sss_noss.hpp
  *
  * Copyright (C) 2022 Alexander Herlez <alexander.herlez@tu-dortmund.de>
  *
@@ -28,15 +28,15 @@ namespace alx::lce {
 
 template <typename t_char_type = uint8_t, uint64_t t_tau = 1024,
           typename t_index_type = uint32_t>
-class lce_sss_naive {
+class lce_sss_noss {
  public:
   typedef t_char_type char_type;
   __extension__ typedef unsigned __int128 uint128_t;
 
-  lce_sss_naive() : m_text(nullptr), m_size(0) {
+  lce_sss_noss() : m_text(nullptr), m_size(0) {
   }
 
-  lce_sss_naive(char_type const* text, size_t size)
+  lce_sss_noss(char_type const* text, size_t size)
       : m_text(text), m_size(size) {
     assert(sizeof(t_char_type) == 1);
 
@@ -82,7 +82,7 @@ class lce_sss_naive {
   }
 
   template <typename C>
-  lce_sss_naive(C const& container)
+  lce_sss_noss(C const& container)
       : lce_sss_naive(container.data(), container.size()) {
   }
 
@@ -135,16 +135,16 @@ class lce_sss_naive {
     size_t block_lce = alx::lce::lce_naive_std<uint128_t>::lce_lr(
         fps.data(), fps.size(), l_, r_);
 
-    size_t l_mm = std::min(sss[l_ + block_lce-1] + 3 * t_tau, m_size);
-    size_t r_mm = std::min(sss[r_ + block_lce-1] + 3 * t_tau, m_size);
+    size_t l_mm = std::min(sss[l_ + block_lce - 1] + 3 * t_tau, m_size);
+    size_t r_mm = std::min(sss[r_ + block_lce - 1] + 3 * t_tau, m_size);
     size_t min_lce = std::min(l_mm - l, r_mm - r);
 
     size_t final_lce =
         min_lce + alx::lce::lce_naive_wordwise<t_char_type>::lce_lr(
                       m_text, m_size, l + min_lce, r + min_lce);
 
-    //assert(final_lce == alx::lce::lce_naive_wordwise<t_char_type>::lce_lr(
-    //                        m_text, m_size, l, r));
+    // assert(final_lce == alx::lce::lce_naive_wordwise<t_char_type>::lce_lr(
+    //                         m_text, m_size, l, r));
     return final_lce;
   }
 
@@ -177,7 +177,7 @@ class lce_sss_naive {
   size_t lce_up_to(size_t i, size_t j, size_t up_to) {
     if (i == j) [[unlikely]] {
       assert(i < m_size);
-      m_size - i;
+      return m_size - i;
     }
 
     size_t l = std::min(i, j);
@@ -189,7 +189,9 @@ class lce_sss_naive {
     size_t lce_local = alx::lce::lce_naive_wordwise<t_char_type>::lce_lr(
         m_text, r + lce_local_max, l, r);
 
-    return lce_local;
+    if (lce_local < lce_local_max || lce_local == lce_max) {
+      return lce_local;
+    }
 
     // From synchronizing position
     std::vector<t_index_type> const& sss = m_sync_set.get_sss();
@@ -227,6 +229,7 @@ class lce_sss_naive {
 
   alx::pred::pred_index<t_index_type, 7, t_index_type> m_pred;
   rolling_hash::sss<t_index_type, t_tau> m_sync_set;
+  // alx::classic_lce{}
 };
 }  // namespace alx::lce
 /******************************************************************************/

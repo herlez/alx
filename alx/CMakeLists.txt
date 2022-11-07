@@ -18,3 +18,6 @@ target_link_libraries(alx INTERFACE alx_suffix_sort)
 
 add_subdirectory(util)
 target_link_libraries(alx INTERFACE alx_util)
+
+add_subdirectory(rmq)
+target_link_libraries(alx INTERFACE alx_rmq)
