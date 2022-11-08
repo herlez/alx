@@ -6,6 +6,7 @@ target_link_libraries(
   test_lce
   GTest::gtest_main
   alx_lce
+  malloc_count
 )
 
 include(GoogleTest)

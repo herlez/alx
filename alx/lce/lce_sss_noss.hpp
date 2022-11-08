@@ -16,11 +16,14 @@
 #include "lce/lce_naive_wordwise.hpp"
 #include "pred/pred_index.hpp"
 #include "rolling_hash/string_synchronizing_set.hpp"
-#include "util/timer.hpp"
 
 #ifdef ALX_BENCHMARK_INTERNAL
+#include <fmt/core.h>
+#include <fmt/ranges.h>
+
+#include "util/timer.hpp"
 #ifdef ALX_MEASURE_SPACE
-#include <malloc_count.h>
+#include <malloc_count/malloc_count.h>
 #endif
 #endif
 

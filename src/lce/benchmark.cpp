@@ -6,14 +6,13 @@
  * All rights reserved. Published under the BSD-2 license in the LICENSE file.
  ******************************************************************************/
 
-#ifndef ALX_BENCHMARK_PARALLEL
-#define ALX_MEASURE_SPACE
-#endif
-
 #include <fmt/core.h>
 #include <fmt/ranges.h>
 #ifdef ALX_MEASURE_SPACE
 #include <malloc_count/malloc_count.h>
+#endif
+#ifdef ALX_BENCHMARK_PARALLEL
+#include <omp.h>
 #endif
 
 #include <filesystem>
@@ -21,22 +20,25 @@
 #include <string>
 #include <tlx/cmdline_parser.hpp>
 #include <vector>
-#include <omp.h>
 
+#include "lce/lce_classic.hpp"
 #include "lce/lce_fp.hpp"
 #include "lce/lce_naive.hpp"
 #include "lce/lce_naive_std.hpp"
 #include "lce/lce_naive_wordwise.hpp"
 #include "lce/lce_rk_prezza.hpp"
-#include "util/io.hpp"
 #include "lce/lce_sss_naive.hpp"
+#include "util/io.hpp"
 #include "util/timer.hpp"
 
 namespace fs = std::filesystem;
 
 std::vector<std::string> algorithms{
-    "all",  "naive", "naive_std", "naive_wordwise", "fp8",   "fp16",
-    "fp32", "fp64",  "fp128",     "fp256",          "fp512", "rk-prezza", "sss_naive"};
+    "all",           "naive",        "naive_std",    "naive_wordwise",
+    "fp8",           "fp16",         "fp32",         "fp64",
+    "fp128",         "fp256",        "fp512",        "rk-prezza",
+    "sss_naive128",  "sss_naive256", "sss_naive512", "sss_naive1024",
+    "sss_naive2048", "classic"};
 
 class benchmark {
  public:
@@ -90,8 +92,45 @@ class benchmark {
   void load_text() {
     alx::util::timer t;
     text = alx::util::load_vector<uint8_t>(text_path);
-    text.resize(text.size() + ((text.size() % 8) ? 0 : 8 - (text.size() % 8)));
+    text.resize(text.size() +
+                ((text.size() % 8) == 0 ? 0 : 8 - (text.size() % 8)));
     assert(text.size() != 0);
+    fmt::print(" text={}", text_path.filename().string());
+    fmt::print(" text_size={}", text.size());
+    fmt::print(" text_time={}", t.get());
+  }
+
+  void load_and_terminate_text() {
+    alx::util::timer t;
+    text = alx::util::load_vector<uint8_t>(
+        text_path, std::numeric_limits<size_t>::max(), 0);
+    // Calculate alphabet
+    std::vector<bool> alphabet(256);
+    for (size_t i{0}; i < text.size(); ++i) {
+      alphabet[text[i]] = true;
+    }
+    // Overwrite terminal symbols
+    uint8_t not_used = 1;
+    while (not_used < 256 && alphabet[not_used]) {
+      ++not_used;
+    }
+    for (size_t i{0}; i < text.size(); ++i) {
+      if (text[i] == 0) {
+        text[i] = not_used;
+      }
+    }
+    // Calculate alphabet size
+    size_t sigma = 0;
+    for (size_t i{0}; i < alphabet.size(); ++i) {
+      sigma += alphabet[i];
+    }
+    // Prepend and append terminal
+    text.front() = 0;
+    text.push_back(0);
+
+    assert(text.size() != 1);
+    fmt::print(" sigma={}", sigma);
+    fmt::print(" not_used={}", not_used);
     fmt::print(" text={}", text_path.filename().string());
     fmt::print(" text_size={}", text.size());
     fmt::print(" text_time={}", t.get());
@@ -158,7 +197,13 @@ class benchmark {
     }
     // Benchmark construction
     fmt::print("RESULT algo={}", algo_name);
-    load_text();
+
+    if (std::is_same_v<alx::lce::lce_classic<uint8_t, uint64_t>, lce_ds_type>) {
+      load_and_terminate_text();
+    } else {
+      load_text();
+    }
+
     lce_ds_type lce_ds = benchmark_construction<lce_ds_type>();
     fmt::print("\n");
 
@@ -232,7 +277,12 @@ int main(int argc, char** argv) {
   b.run<alx::lce::lce_fp<uint8_t, 256>>("fp256");
   b.run<alx::lce::lce_fp<uint8_t, 512>>("fp512");
   b.run<rklce::lce_rk_prezza>("rk-prezza");
-  b.run<alx::lce::lce_sss_naive<uint8_t, 16, uint64_t>>("sss_naive");
+  b.run<alx::lce::lce_sss_naive<uint8_t, 128, uint64_t>>("sss_naive128");
+  b.run<alx::lce::lce_sss_naive<uint8_t, 256, uint64_t>>("sss_naive256");
+  b.run<alx::lce::lce_sss_naive<uint8_t, 512, uint64_t>>("sss_naive512");
+  b.run<alx::lce::lce_sss_naive<uint8_t, 1024, uint64_t>>("sss_naive1024");
+  b.run<alx::lce::lce_sss_naive<uint8_t, 2048, uint64_t>>("sss_naive2048");
+  b.run<alx::lce::lce_classic<uint8_t, uint64_t>>("classic");
 
   // b.run<alx::lce::lce_sss<uint8_t, 512>>("fp512");
 }

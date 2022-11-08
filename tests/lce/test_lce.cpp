@@ -55,7 +55,7 @@ void test_simple() {
 }
 
 template <typename lce_ds_type>
-void test_simple_terminated() {
+void test_simple_terminated(bool start_terminator = false) {
   typedef typename lce_ds_type::char_type char_typee;
   std::vector<char_typee> text(2000);
   std::iota(text.begin(), text.begin() + 1000,
@@ -68,7 +68,9 @@ void test_simple_terminated() {
       c++;
     }
   }
-  text.front() = 0;
+  if (start_terminator) {
+    text.front() = 0;
+  }
   text.push_back(0);
 
   std::vector<char_typee> text_copy = text;
@@ -133,7 +135,7 @@ void test_variants() {
 }
 
 template <typename lce_ds_type>
-void test_variants_terminated() {
+void test_variants_terminated(bool start_terminator = false) {
   typedef typename lce_ds_type::char_type char_typee;
   std::vector<char_typee> text(200);
   std::iota(text.begin(), text.begin() + 100,
@@ -146,14 +148,21 @@ void test_variants_terminated() {
       c++;
     }
   }
-  text.front() = 0;
+  if (start_terminator) {
+    text.front() = 0;
+  }
   text.push_back(0);
 
   lce_ds_type ds(text);
   EXPECT_EQ(ds.lce_lr(1, 101), 99);
   EXPECT_EQ(ds.lce(50, 100), 0);
 
-  EXPECT_EQ(ds.lce_mismatch(200, 0), std::make_pair(false, size_t{1}));
+  if (start_terminator) {
+    EXPECT_EQ(ds.lce_mismatch(200, 0), std::make_pair(false, size_t{1}));
+  } else {
+    EXPECT_EQ(ds.lce_mismatch(200, 0), std::make_pair(true, size_t{0}));
+  }
+
   EXPECT_EQ(ds.lce_mismatch(100, 50), std::make_pair(true, size_t{0}));
 
   EXPECT_EQ(ds.is_leq_suffix(50, 150), false);
@@ -252,16 +261,15 @@ TEST(LceNaiveWordwise, All) {
 TEST(LceClassic, All) {
   test_empty_constructor<alx::lce::lce_classic<unsigned char>>();
 
-  test_simple_terminated<alx::lce::lce_classic<unsigned char>>();
-  test_simple_terminated<alx::lce::lce_classic<uint8_t>>();
-  test_simple_terminated<alx::lce::lce_classic<uint32_t>>();
-  test_simple_terminated<alx::lce::lce_classic<uint64_t>>();
-  test_simple_terminated<alx::lce::lce_classic<__uint128_t>>();
+  test_simple_terminated<alx::lce::lce_classic<uint8_t>>(false);
+  test_simple_terminated<alx::lce::lce_classic<uint32_t>>(true);
+  test_simple_terminated<alx::lce::lce_classic<uint64_t>>(true);
+  test_simple_terminated<alx::lce::lce_classic<__uint128_t>>(true);
 
-  test_variants_terminated<alx::lce::lce_classic<uint8_t>>();
-  test_variants_terminated<alx::lce::lce_classic<uint32_t>>();
-  test_variants_terminated<alx::lce::lce_classic<uint64_t>>();
-  test_variants_terminated<alx::lce::lce_classic<__uint128_t>>();
+  test_variants_terminated<alx::lce::lce_classic<uint8_t>>(false);
+  test_variants_terminated<alx::lce::lce_classic<uint32_t>>(true);
+  test_variants_terminated<alx::lce::lce_classic<uint64_t>>(true);
+  test_variants_terminated<alx::lce::lce_classic<__uint128_t>>(true);
 }
 
 TEST(LceSssNaive, All) {

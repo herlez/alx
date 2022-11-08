@@ -9,12 +9,23 @@
 #pragma once
 #include <assert.h>
 #include <libsais.h>
+#include <libsais64.h>
 
 #include <cstdint>
 #include <gsaca-double-sort-par.hpp>
 
 #include "lce/lce_naive_wordwise.hpp"
 #include "rmq/rmq_nlgn.hpp"
+
+#ifdef ALX_BENCHMARK_INTERNAL
+#include <fmt/core.h>
+#include <fmt/ranges.h>
+
+#include "util/timer.hpp"
+#ifdef ALX_MEASURE_SPACE
+#include <malloc_count/malloc_count.h>
+#endif
+#endif
 
 namespace alx::lce {
 
@@ -29,7 +40,35 @@ class lce_classic {
   lce_classic(char_type const* text, size_t size) : m_text(text), m_size(size) {
     std::vector<t_index_type> sa(size);
     // sort sa
-    gsaca_ds1_par(text, sa.data(), size);
+#ifdef ALX_BENCHMARK_INTERNAL
+    alx::util::timer t;
+#ifdef ALX_MEASURE_SPACE
+    size_t mem_before = malloc_count_current();
+    malloc_count_reset_peak();
+#endif
+#endif
+
+    if constexpr (sizeof(t_index_type) == 4 && sizeof(t_char_type) == 1) {
+      libsais(reinterpret_cast<const uint8_t*>(text),
+              reinterpret_cast<int32_t*>(sa.data()), size, 0, nullptr);
+    } else if constexpr (sizeof(t_index_type) == 8 &&
+                         sizeof(t_char_type) == 1) {
+      libsais64(reinterpret_cast<const uint8_t*>(text),
+                reinterpret_cast<int64_t*>(sa.data()), size, 0, nullptr);
+    } else {
+      gsaca_ds1_par(text, sa.data(), size);
+    }
+#ifdef ALX_BENCHMARK_INTERNAL
+    std::cout << " gsaca_time=" << t.get_and_reset();
+#endif
+
+#ifdef ALX_BENCHMARK_INTERNAL
+    fmt::print(" gsaca_time={}", t.get_and_reset());
+#ifdef ALX_MEASURE_SPACE
+    fmt::print(" gsaca_mem={}", malloc_count_current() - mem_before);
+    fmt::print(" gsaca_mem_peak={}", malloc_count_peak() - mem_before);
+#endif
+#endif
 
     // build isa
     m_isa.resize(size);

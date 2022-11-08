@@ -16,11 +16,14 @@
 #include "lce/lce_naive_wordwise.hpp"
 #include "pred/pred_index.hpp"
 #include "rolling_hash/string_synchronizing_set.hpp"
-#include "util/timer.hpp"
 
 #ifdef ALX_BENCHMARK_INTERNAL
+#include <fmt/core.h>
+#include <fmt/ranges.h>
+
+#include "util/timer.hpp"
 #ifdef ALX_MEASURE_SPACE
-#include <malloc_count.h>
+#include <malloc_count/malloc_count.h>
 #endif
 #endif
 
@@ -135,16 +138,16 @@ class lce_sss_naive {
     size_t block_lce = alx::lce::lce_naive_std<uint128_t>::lce_lr(
         fps.data(), fps.size(), l_, r_);
 
-    size_t l_mm = std::min(sss[l_ + block_lce-1] + 3 * t_tau, m_size);
-    size_t r_mm = std::min(sss[r_ + block_lce-1] + 3 * t_tau, m_size);
+    size_t l_mm = std::min(sss[l_ + block_lce - 1] + 3 * t_tau, m_size);
+    size_t r_mm = std::min(sss[r_ + block_lce - 1] + 3 * t_tau, m_size);
     size_t min_lce = std::min(l_mm - l, r_mm - r);
 
     size_t final_lce =
         min_lce + alx::lce::lce_naive_wordwise<t_char_type>::lce_lr(
                       m_text, m_size, l + min_lce, r + min_lce);
 
-    //assert(final_lce == alx::lce::lce_naive_wordwise<t_char_type>::lce_lr(
-    //                        m_text, m_size, l, r));
+    // assert(final_lce == alx::lce::lce_naive_wordwise<t_char_type>::lce_lr(
+    //                         m_text, m_size, l, r));
     return final_lce;
   }
 
