@@ -48,19 +48,22 @@ class lce_classic {
 #endif
 #endif
 
-    if constexpr (sizeof(t_index_type) == 4 && sizeof(t_char_type) == 1) {
-      libsais(reinterpret_cast<const uint8_t*>(text),
-              reinterpret_cast<int32_t*>(sa.data()), size, 0, nullptr);
-    } else if constexpr (sizeof(t_index_type) == 8 &&
-                         sizeof(t_char_type) == 1) {
-      libsais64(reinterpret_cast<const uint8_t*>(text),
-                reinterpret_cast<int64_t*>(sa.data()), size, 0, nullptr);
-    } else {
-      gsaca_ds1_par(text, sa.data(), size);
+    // if constexpr (sizeof(t_index_type) == 4 && sizeof(t_char_type) == 1) {
+    //   libsais(reinterpret_cast<const uint8_t*>(text),
+    //           reinterpret_cast<int32_t*>(sa.data()), size, 0, nullptr);
+    // } else if constexpr (sizeof(t_index_type) == 8 &&
+    //                      sizeof(t_char_type) == 1) {
+    //   libsais64(reinterpret_cast<const uint8_t*>(text),
+    //             reinterpret_cast<int64_t*>(sa.data()), size, 0, nullptr);
+    // } else {
+
+    //assert(text[0] == 0);
+    //assert(text[size - 1] == 0);
+    for (size_t i = 1; i < size - 1; ++i) {
+      assert(text[i] != std::numeric_limits<t_char_type>::max());
     }
-#ifdef ALX_BENCHMARK_INTERNAL
-    std::cout << " gsaca_time=" << t.get_and_reset();
-#endif
+    gsaca_for_lce(text, sa.data(), size);
+    //}
 
 #ifdef ALX_BENCHMARK_INTERNAL
     fmt::print(" gsaca_time={}", t.get_and_reset());
@@ -82,17 +85,24 @@ class lce_classic {
     m_lcp[0] = 0;
     size_t current_lcp = 0;
 #pragma omp parallel for firstprivate(current_lcp)
-    for (size_t i = 0; i < m_lcp.size() - 1; ++i) {
+    for (size_t i = 0; i < m_lcp.size(); ++i) {
       size_t suffix_array_pos = m_isa[i];
+      if(suffix_array_pos == 0) {
+        continue;
+      }
       assert(suffix_array_pos != 0);
 
       size_t preceding_suffix_pos = sa[suffix_array_pos - 1];
       current_lcp += lce_naive_wordwise<char_type>::lce_uneq(
           text, size, i + current_lcp, preceding_suffix_pos + current_lcp);
       m_lcp[suffix_array_pos] = current_lcp;
+      assert(lce_naive_wordwise<char_type>::lce_uneq(
+          text, size, i, preceding_suffix_pos) == current_lcp);
+
       if (current_lcp != 0) {
         --current_lcp;
       }
+      current_lcp = 0;
     }
     // built rmq
     m_rmq = alx::rmq::rmq_nlgn<t_index_type>(m_lcp);

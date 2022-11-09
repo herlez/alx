@@ -98,7 +98,7 @@ class sss {
       m_sss.back() =
           size - 2 * t_tau + 1;  // sentinel needed for text with runs
       if (m_fps_calculated) {
-        m_fps.back() = 0;
+        m_fps.back() = 1;
       }
     }
   }

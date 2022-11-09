@@ -28,6 +28,7 @@
 #include "lce/lce_naive_wordwise.hpp"
 #include "lce/lce_rk_prezza.hpp"
 #include "lce/lce_sss_naive.hpp"
+#include "lce/lce_sss_noss.hpp"
 #include "util/io.hpp"
 #include "util/timer.hpp"
 
@@ -38,7 +39,7 @@ std::vector<std::string> algorithms{
     "fp8",           "fp16",         "fp32",         "fp64",
     "fp128",         "fp256",        "fp512",        "rk-prezza",
     "sss_naive128",  "sss_naive256", "sss_naive512", "sss_naive1024",
-    "sss_naive2048", "classic"};
+    "sss_naive2048", "sss_noss128",  "classic"};
 
 class benchmark {
  public:
@@ -198,11 +199,12 @@ class benchmark {
     // Benchmark construction
     fmt::print("RESULT algo={}", algo_name);
 
-    if (std::is_same_v<alx::lce::lce_classic<uint8_t, uint64_t>, lce_ds_type>) {
-      load_and_terminate_text();
-    } else {
-      load_text();
-    }
+    // if (std::is_same_v<alx::lce::lce_classic<uint8_t, uint64_t>,
+    // lce_ds_type>) {
+    //   load_and_terminate_text();
+    // } else {
+    load_text();
+    //}
 
     lce_ds_type lce_ds = benchmark_construction<lce_ds_type>();
     fmt::print("\n");
@@ -282,6 +284,12 @@ int main(int argc, char** argv) {
   b.run<alx::lce::lce_sss_naive<uint8_t, 512, uint64_t>>("sss_naive512");
   b.run<alx::lce::lce_sss_naive<uint8_t, 1024, uint64_t>>("sss_naive1024");
   b.run<alx::lce::lce_sss_naive<uint8_t, 2048, uint64_t>>("sss_naive2048");
+  b.run<alx::lce::lce_sss_noss<uint8_t, 128, uint64_t>>("sss_noss128");
+  // b.run<alx::lce::lce_sss_noss<uint8_t, 256, uint64_t>>("sss_noss256");
+  // b.run<alx::lce::lce_sss_noss<uint8_t, 512, uint64_t>>("sss_noss512");
+  // b.run<alx::lce::lce_sss_noss<uint8_t, 1024, uint64_t>>("sss_noss1024");
+  // b.run<alx::lce::lce_sss_noss<uint8_t, 2048, uint64_t>>("sss_noss2048");
+
   b.run<alx::lce::lce_classic<uint8_t, uint64_t>>("classic");
 
   // b.run<alx::lce::lce_sss<uint8_t, 512>>("fp512");

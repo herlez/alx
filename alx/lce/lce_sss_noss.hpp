@@ -82,11 +82,24 @@ class lce_sss_noss {
     fmt::print(" pred_construct_mem_peak={}", malloc_count_peak() - mem_before);
 #endif
 #endif
+
+    std::vector<uint128_t> const& fps = m_sync_set.get_fps();
+    m_fp_lce = alx::lce::lce_classic<uint128_t, t_index_type>(fps);
+    // free fps from sync set
+
+#ifdef ALX_BENCHMARK_INTERNAL
+    fmt::print(" fp_lce_construct_time={}", t.get_and_reset());
+#ifdef ALX_MEASURE_SPACE
+    fmt::print(" fp_lce_construct_mem={}", malloc_count_current() - mem_before);
+    fmt::print(" fp_lce_construct_mem_peak={}",
+               malloc_count_peak() - mem_before);
+#endif
+#endif
   }
 
   template <typename C>
   lce_sss_noss(C const& container)
-      : lce_sss_naive(container.data(), container.size()) {
+      : lce_sss_noss(container.data(), container.size()) {
   }
 
   // Return the number of common letters in text[i..] and text[j..].
@@ -134,9 +147,9 @@ class lce_sss_noss {
     //   return
     // }
 
-    size_t block_lce_max = sss.size() - r_;
-    size_t block_lce = alx::lce::lce_naive_std<uint128_t>::lce_lr(
-        fps.data(), fps.size(), l_, r_);
+    size_t block_lce = m_fp_lce.lce_lr(l_, r_);
+    //assert(block_lce == alx::lce::lce_naive_std<uint128_t>::lce_lr(
+    //     fps.data(), fps.size(), l_, r_));
 
     size_t l_mm = std::min(sss[l_ + block_lce - 1] + 3 * t_tau, m_size);
     size_t r_mm = std::min(sss[r_ + block_lce - 1] + 3 * t_tau, m_size);
@@ -147,7 +160,7 @@ class lce_sss_noss {
                       m_text, m_size, l + min_lce, r + min_lce);
 
     // assert(final_lce == alx::lce::lce_naive_wordwise<t_char_type>::lce_lr(
-    //                         m_text, m_size, l, r));
+    //                        x` m_text, m_size, l, r));
     return final_lce;
   }
 
@@ -180,7 +193,7 @@ class lce_sss_noss {
   size_t lce_up_to(size_t i, size_t j, size_t up_to) {
     if (i == j) [[unlikely]] {
       assert(i < m_size);
-      return m_size - i;
+      m_size - i;
     }
 
     size_t l = std::min(i, j);
@@ -192,9 +205,7 @@ class lce_sss_noss {
     size_t lce_local = alx::lce::lce_naive_wordwise<t_char_type>::lce_lr(
         m_text, r + lce_local_max, l, r);
 
-    if (lce_local < lce_local_max || lce_local == lce_max) {
-      return lce_local;
-    }
+    return lce_local;
 
     // From synchronizing position
     std::vector<t_index_type> const& sss = m_sync_set.get_sss();
@@ -203,9 +214,12 @@ class lce_sss_noss {
     size_t l_ = m_pred.successor(l).pos;
     size_t r_ = m_pred.successor(r).pos;
 
-    size_t block_lce_max = sss.size() - r_;
-    size_t block_lce = alx::lce::lce_naive_std<uint128_t>::lce_lr(
-        fps.data(), fps.size(), l_, r_);
+    // size_t block_lce_max = sss.size() - r_;
+    // size_t block_lce = alx::lce::lce_naive_std<uint128_t>::lce_lr(
+    //     fps.data(), fps.size(), l_, r_);
+    size_t block_lce = m_fp_lce.lce_lr(l_, r_);
+    //assert(block_lce == alx::lce::lce_naive_std<uint128_t>::lce_lr(
+    //     fps.data(), fps.size(), l_, r_));
 
     size_t l_mm = sss[l_ + block_lce - 1];
     size_t r_mm = sss[r_ + block_lce - 1];
@@ -232,7 +246,7 @@ class lce_sss_noss {
 
   alx::pred::pred_index<t_index_type, 7, t_index_type> m_pred;
   rolling_hash::sss<t_index_type, t_tau> m_sync_set;
-  // alx::classic_lce{}
+  alx::lce::lce_classic<uint128_t, t_index_type> m_fp_lce;
 };
 }  // namespace alx::lce
 /******************************************************************************/

@@ -18,8 +18,8 @@
 #include "lce/lce_naive_std.hpp"
 #include "lce/lce_naive_wordwise.hpp"
 #include "lce/lce_rk_prezza.hpp"
-#include "lce/lce_sss.hpp"
 #include "lce/lce_sss_naive.hpp"
+#include "lce/lce_sss_noss.hpp"
 
 template <typename lce_ds_type>
 void test_empty_constructor() {
@@ -34,6 +34,11 @@ void test_simple() {
             std::numeric_limits<char_typee>::max() / 2);
   std::iota(text.begin() + 1000, text.end(),
             std::numeric_limits<char_typee>::max() / 2);
+  for (auto& c : text) {
+    if (c == numeric_limits<char_typee>::max()) {
+      c = 0;
+    }
+  }
   std::vector<char_typee> text_copy = text;
   // Test pointer constructor
   {
@@ -54,6 +59,7 @@ void test_simple() {
   text = text_copy;
 }
 
+/*
 template <typename lce_ds_type>
 void test_simple_terminated(bool start_terminator = false) {
   typedef typename lce_ds_type::char_type char_typee;
@@ -91,7 +97,7 @@ void test_simple_terminated(bool start_terminator = false) {
     EXPECT_EQ(ds.lce(500, 1000), 0);
   }
   text = text_copy;
-}
+}*/
 
 template <typename lce_ds_type>
 void test_suffix_sorting() {
@@ -117,7 +123,11 @@ void test_variants() {
             std::numeric_limits<char_typee>::max() / 2);
   std::iota(text.begin() + 100, text.end(),
             std::numeric_limits<char_typee>::max() / 2);
-
+  for (auto& c : text) {
+    if (c == numeric_limits<char_typee>::max()) {
+      c = 0;
+    }
+  }
   lce_ds_type ds(text);
   EXPECT_EQ(ds.lce_lr(0, 100), 100);
   EXPECT_EQ(ds.lce(50, 100), 0);
@@ -134,6 +144,7 @@ void test_variants() {
   EXPECT_EQ(ds.lce_up_to(100, 50, 20), size_t{0});
 }
 
+/*
 template <typename lce_ds_type>
 void test_variants_terminated(bool start_terminator = false) {
   typedef typename lce_ds_type::char_type char_typee;
@@ -172,7 +183,7 @@ void test_variants_terminated(bool start_terminator = false) {
 
   EXPECT_EQ(ds.lce_up_to(101, 1, 20), size_t{20});
   EXPECT_EQ(ds.lce_up_to(101, 51, 20), size_t{0});
-}
+}*/
 
 template <typename lce_ds_type>
 void test_retransform() {
@@ -261,15 +272,15 @@ TEST(LceNaiveWordwise, All) {
 TEST(LceClassic, All) {
   test_empty_constructor<alx::lce::lce_classic<unsigned char>>();
 
-  test_simple_terminated<alx::lce::lce_classic<uint8_t>>(false);
-  test_simple_terminated<alx::lce::lce_classic<uint32_t>>(true);
-  test_simple_terminated<alx::lce::lce_classic<uint64_t>>(true);
-  test_simple_terminated<alx::lce::lce_classic<__uint128_t>>(true);
+  test_simple<alx::lce::lce_classic<uint8_t>>();
+  test_simple<alx::lce::lce_classic<uint32_t>>();
+  test_simple<alx::lce::lce_classic<uint64_t>>();
+  test_simple<alx::lce::lce_classic<__uint128_t>>();
 
-  test_variants_terminated<alx::lce::lce_classic<uint8_t>>(false);
-  test_variants_terminated<alx::lce::lce_classic<uint32_t>>(true);
-  test_variants_terminated<alx::lce::lce_classic<uint64_t>>(true);
-  test_variants_terminated<alx::lce::lce_classic<__uint128_t>>(true);
+  test_variants<alx::lce::lce_classic<uint8_t>>();
+  test_variants<alx::lce::lce_classic<uint32_t>>();
+  test_variants<alx::lce::lce_classic<uint64_t>>();
+  test_variants<alx::lce::lce_classic<__uint128_t>>();
 }
 
 TEST(LceSssNaive, All) {
@@ -283,16 +294,16 @@ TEST(LceSssNaive, All) {
   test_variants<alx::lce::lce_sss_naive<uint8_t, 16>>();
 }
 
-/*TEST(LceSssNoSort, All) {
-  test_empty_constructor<alx::lce::lce_sss_no_sort<unsigned char>>();
-  test_simple<alx::lce::lce_sss_no_sort<unsigned char>>();
-  test_simple<alx::lce::lce_sss_no_sort<char>>();
-  test_simple<alx::lce::lce_sss_no_sort<uint8_t>>();
+TEST(LceSssNoSs, All) {
+  test_empty_constructor<alx::lce::lce_sss_noss<unsigned char, 16>>();
+  test_simple<alx::lce::lce_sss_noss<unsigned char, 16>>();
+  test_simple<alx::lce::lce_sss_noss<char, 16>>();
+  test_simple<alx::lce::lce_sss_noss<uint8_t, 16>>();
 
-  test_variants<alx::lce::lce_sss_no_sort<unsigned char>>();
-  test_variants<alx::lce::lce_sss_no_sort<char>>();
-  test_variants<alx::lce::lce_sss_no_sort<uint8_t>>();
-  }*/
+  test_variants<alx::lce::lce_sss_noss<unsigned char, 16>>();
+  test_variants<alx::lce::lce_sss_noss<char, 16>>();
+  test_variants<alx::lce::lce_sss_noss<uint8_t, 16>>();
+}
 
 /*TEST(LceSss, All) {
   test_empty_constructor<alx::lce::lce_sss<unsigned char, 16>>();
