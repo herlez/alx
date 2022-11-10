@@ -57,8 +57,8 @@ class lce_classic {
     //             reinterpret_cast<int64_t*>(sa.data()), size, 0, nullptr);
     // } else {
 
-    //assert(text[0] == 0);
-    //assert(text[size - 1] == 0);
+    // assert(text[0] == 0);
+    // assert(text[size - 1] == 0);
     for (size_t i = 1; i < size - 1; ++i) {
       assert(text[i] != std::numeric_limits<t_char_type>::max());
     }
@@ -84,25 +84,36 @@ class lce_classic {
     m_lcp.resize(sa.size());
     m_lcp[0] = 0;
     size_t current_lcp = 0;
-#pragma omp parallel for firstprivate(current_lcp)
-    for (size_t i = 0; i < m_lcp.size(); ++i) {
-      size_t suffix_array_pos = m_isa[i];
-      if(suffix_array_pos == 0) {
-        continue;
-      }
-      assert(suffix_array_pos != 0);
 
-      size_t preceding_suffix_pos = sa[suffix_array_pos - 1];
-      current_lcp += lce_naive_wordwise<char_type>::lce_uneq(
-          text, size, i + current_lcp, preceding_suffix_pos + current_lcp);
-      m_lcp[suffix_array_pos] = current_lcp;
-      assert(lce_naive_wordwise<char_type>::lce_uneq(
-          text, size, i, preceding_suffix_pos) == current_lcp);
+#pragma omp parallel
+    {
+      const int t = omp_get_thread_num();
+      const int nt = omp_get_num_threads();
+      const size_t slice_size = size / nt;
 
-      if (current_lcp != 0) {
-        --current_lcp;
+      const size_t begin = t * slice_size;
+      const size_t end = (t < nt - 1) ? (t + 1) * slice_size : size;
+
+      size_t current_lcp = 0;
+      for (size_t i{begin}; i < end; ++i) {
+        size_t suffix_array_pos = m_isa[i];
+        if (suffix_array_pos == 0) {
+          continue;
+        }
+        assert(suffix_array_pos != 0);
+
+        size_t preceding_suffix_pos = sa[suffix_array_pos - 1];
+        current_lcp += lce_naive_wordwise<char_type>::lce_uneq(
+            text, size, i + current_lcp, preceding_suffix_pos + current_lcp);
+        m_lcp[suffix_array_pos] = current_lcp;
+        assert(lce_naive_wordwise<char_type>::lce_uneq(
+                   text, size, i, preceding_suffix_pos) == current_lcp);
+
+        if (current_lcp != 0) {
+          --current_lcp;
+        }
+        current_lcp = 0;
       }
-      current_lcp = 0;
     }
     // built rmq
     m_rmq = alx::rmq::rmq_nlgn<t_index_type>(m_lcp);
@@ -157,12 +168,6 @@ class lce_classic {
     return (
         i + lce_val == m_size ||
         ((j + lce_val != m_size) && m_text[i + lce_val] < m_text[j + lce_val]));
-  }
-
-  // Return the lce of text[i..i+lce) and text[j..j+lce]
-  size_t lce_up_to(size_t i, size_t j, size_t up_to) const {
-    size_t lce_val = lce_uneq(i, j);
-    return std::min(up_to, lce_val);
   }
 
  private:

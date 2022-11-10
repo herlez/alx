@@ -88,8 +88,11 @@ class lce_naive_std {
   // Here l must be smaller than r.
   static size_t lce_lr(char_type const* text, size_t size, size_t l, size_t r) {
     assert(l < r);
-    return std::distance(text + r,
-                         std::mismatch(text + r, text + size, text + l).first);
+    auto rd = std::mismatch(text + r, text + size, text + l).first;
+    auto d = std::distance(text+r, rd);
+    return d;
+    //return std::distance(text + r,
+    //                     std::mismatch(text + r, text + size, text + l).first);
   }
 
   // Return {b, lce}, where lce is the number of common letters in text[i..]

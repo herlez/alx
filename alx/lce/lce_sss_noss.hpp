@@ -143,13 +143,13 @@ class lce_sss_noss {
     size_t l_ = m_pred.successor(l).pos;
     size_t r_ = m_pred.successor(r).pos;
 
-    // if(l_-l != r_ -r) {
-    //   return
-    // }
+    //if (l_ - l != r_ - r) {
+    //  return
+    //}
 
     size_t block_lce = m_fp_lce.lce_lr(l_, r_);
-    //assert(block_lce == alx::lce::lce_naive_std<uint128_t>::lce_lr(
-    //     fps.data(), fps.size(), l_, r_));
+    assert(block_lce == alx::lce::lce_naive_std<uint128_t>::lce_lr(
+                            fps.data(), fps.size(), l_, r_));
 
     size_t l_mm = std::min(sss[l_ + block_lce - 1] + 3 * t_tau, m_size);
     size_t r_mm = std::min(sss[r_ + block_lce - 1] + 3 * t_tau, m_size);
@@ -159,8 +159,8 @@ class lce_sss_noss {
         min_lce + alx::lce::lce_naive_wordwise<t_char_type>::lce_lr(
                       m_text, m_size, l + min_lce, r + min_lce);
 
-    // assert(final_lce == alx::lce::lce_naive_wordwise<t_char_type>::lce_lr(
-    //                        x` m_text, m_size, l, r));
+    assert(final_lce == alx::lce::lce_naive_wordwise<t_char_type>::lce_lr(
+                            m_text, m_size, l, r));
     return final_lce;
   }
 
@@ -187,48 +187,6 @@ class lce_sss_noss {
     return (
         i + lce_val == m_size ||
         ((j + lce_val != m_size) && m_text[i + lce_val] < m_text[j + lce_val]));
-  }
-
-  // Return the lce of text[i..i+lce) and text[j..j+lce]
-  size_t lce_up_to(size_t i, size_t j, size_t up_to) {
-    if (i == j) [[unlikely]] {
-      assert(i < m_size);
-      m_size - i;
-    }
-
-    size_t l = std::min(i, j);
-    size_t r = std::max(i, j);
-
-    // Naive part until synchronizing position
-    size_t lce_max{std::min(m_size - r, up_to)};
-    size_t lce_local_max{std::min(3 * t_tau, lce_max)};
-    size_t lce_local = alx::lce::lce_naive_wordwise<t_char_type>::lce_lr(
-        m_text, r + lce_local_max, l, r);
-
-    return lce_local;
-
-    // From synchronizing position
-    std::vector<t_index_type> const& sss = m_sync_set.get_sss();
-    std::vector<uint128_t> const& fps = m_sync_set.get_fps();
-
-    size_t l_ = m_pred.successor(l).pos;
-    size_t r_ = m_pred.successor(r).pos;
-
-    // size_t block_lce_max = sss.size() - r_;
-    // size_t block_lce = alx::lce::lce_naive_std<uint128_t>::lce_lr(
-    //     fps.data(), fps.size(), l_, r_);
-    size_t block_lce = m_fp_lce.lce_lr(l_, r_);
-    //assert(block_lce == alx::lce::lce_naive_std<uint128_t>::lce_lr(
-    //     fps.data(), fps.size(), l_, r_));
-
-    size_t l_mm = sss[l_ + block_lce - 1];
-    size_t r_mm = sss[r_ + block_lce - 1];
-
-    size_t lce_rest = alx::lce::lce_naive_wordwise<t_char_type>::lce_lr(
-        m_text, m_size, l_mm, r_mm);
-
-    size_t lce = (l_mm - l) + lce_rest;
-    return lce;
   }
 
   char_type operator[](size_t i) {

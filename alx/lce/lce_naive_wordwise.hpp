@@ -98,13 +98,14 @@ class lce_naive_wordwise {
         reinterpret_cast<uint128_t const*>(text + l);
     uint128_t const* const text_blocks_j =
         reinterpret_cast<uint128_t const*>(text + r);
-    size_t lce_val =
-        std::distance(text_blocks_j,
-                      std::mismatch(text_blocks_j,
-                                    text_blocks_j + max_lce / sizeof(uint128_t),
-                                    text_blocks_i)
-                          .first);
-    lce_val *= sizeof(uint128_t);
+    size_t lce_val = std::distance(
+        text_blocks_j,
+        std::mismatch(
+            text_blocks_j,
+            text_blocks_j + max_lce / (sizeof(uint128_t) / sizeof(char_type)),
+            text_blocks_i)
+            .first);
+    lce_val *= sizeof(uint128_t) / sizeof(char_type);
     // The last block did not match. Here we compare its single characters
     while (lce_val < max_lce && text[l + lce_val] == text[r + lce_val]) {
       ++lce_val;
@@ -134,12 +135,13 @@ class lce_naive_wordwise {
                             size_t j) {
     assert(i != j);
     size_t lce_val = lce_uneq(text, size, i, j);
-    return (i + lce_val == size || ((j + lce_val != size) && text[i + lce_val] < text[j + lce_val]));
+    return (i + lce_val == size ||
+            ((j + lce_val != size) && text[i + lce_val] < text[j + lce_val]));
   }
 
   // Return the lce of text[i..i+lce) and text[j..j+lce]
-  static size_t lce_up_to(char_type const* text, size_t size,
-                                           size_t i, size_t j, size_t up_to) {
+  static size_t lce_up_to(char_type const* text, size_t size, size_t i,
+                          size_t j, size_t up_to) {
     if (i == j) [[unlikely]] {
       assert(i < size);
       return size - i;
