@@ -113,7 +113,6 @@ class lce_sss_naive {
   // Here l must be smaller than r.
   inline uint64_t lce_lr(size_t l, size_t r) const {
     // Naive part until synchronizing position
-
     size_t lce_max{m_size - r};
     size_t lce_local_max{std::min(3 * t_tau, lce_max)};
     size_t lce_local = alx::lce::lce_naive_wordwise<t_char_type>::lce_lr(
@@ -130,18 +129,26 @@ class lce_sss_naive {
     size_t l_ = m_pred.successor(l).pos;
     size_t r_ = m_pred.successor(r).pos;
 
-    // if(l_-l != r_ -r) {
-    //   return
-    // }
+    // Case 1: Positions l and r and in the middle of a run.
+    if (sss[l_] - l != sss[r_] - r) {
+      return std::min(sss[l_] - l, sss[r_] - r) + 2 * t_tau - 1;
+    }
 
-    size_t block_lce_max = sss.size() - r_;
     size_t block_lce = alx::lce::lce_naive_std<uint128_t>::lce_lr(
         fps.data(), fps.size(), l_, r_);
+    size_t l__ = l_ + block_lce;
+    size_t r__ = r_ + block_lce;
+    // Case 2: Positions l' and r' are at the start of a run.
+    if (r__ + 1 < sss.size() && sss[l__ + 1] - sss[l__] > 3 * t_tau &&
+        sss[r__ + 1] - sss[r__] > 3 * t_tau) {
+      return std::min(sss[l__ + 1] - l, sss[r__ + 1] - r) + 2 * t_tau - 1;
+    }
 
-    size_t l_mm = std::min(sss[l_ + block_lce - 1] + 3 * t_tau, m_size);
-    size_t r_mm = std::min(sss[r_ + block_lce - 1] + 3 * t_tau, m_size);
+    size_t l_mm = std::min(sss[l__-1] + 3 * t_tau, m_size);
+    size_t r_mm = std::min(sss[r__-1] + 3 * t_tau, m_size);
     size_t min_lce = std::min(l_mm - l, r_mm - r);
 
+    // Case 3: Positions l' and r' are no connected with runs.
     size_t final_lce =
         min_lce + alx::lce::lce_naive_wordwise<t_char_type>::lce_lr(
                       m_text, m_size, l + min_lce, r + min_lce);

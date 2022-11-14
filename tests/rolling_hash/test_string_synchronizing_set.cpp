@@ -96,7 +96,7 @@ bool check_string_synchronizing_set(text_t const& text, sss_t const& sss_ds) {
           return false;
         }
         if (sss_ds.fps_calculated() &&
-            (fps[pos_in_sss_i] != fps[pos_in_sss_j])) {
+            (fps[pos_in_sss_i] << 21 != fps[pos_in_sss_j] << 21)) {
           fmt::print(" fingerprints should be equal: {} != {}\n",
                      fps[pos_in_sss_i], fps[pos_in_sss_j]);
           return false;

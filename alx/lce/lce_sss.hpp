@@ -2,7 +2,6 @@
  * alx/lce/lce_sss.hpp
  *
  * Copyright (C) 2022 Alexander Herlez <alexander.herlez@tu-dortmund.de>
- * Copyright (C) 2019 Florian Kurpicz <florian.kurpicz@tu-dortmund.de>
  *
  * All rights reserved. Published under the BSD-2 license in the LICENSE file.
  ******************************************************************************/
@@ -14,16 +13,17 @@
 #include <memory>
 #include <vector>
 
+#include "lce/lce_naive_wordwise.hpp"
 #include "pred/pred_index.hpp"
 #include "rolling_hash/string_synchronizing_set.hpp"
-#include "util/timer.hpp"
-//#include "util_ssss_par/lce-rmq.hpp"
-//#include "util_ssss_par/ssss_par.hpp"
-//#include "util_ssss_par/sss_checker.hpp"
 
 #ifdef ALX_BENCHMARK_INTERNAL
+#include <fmt/core.h>
+#include <fmt/ranges.h>
+
+#include "util/timer.hpp"
 #ifdef ALX_MEASURE_SPACE
-#include <malloc_count.h>
+#include <malloc_count/malloc_count.h>
 #endif
 #endif
 
@@ -39,7 +39,8 @@ class lce_sss {
   lce_sss() : m_text(nullptr), m_size(0) {
   }
 
-  lce_sss(char_type const* text, size_t size) : m_text(text), m_size(size) {
+  lce_sss(char_type const* text, size_t size)
+      : m_text(text), m_size(size) {
     assert(sizeof(t_char_type) == 1);
 
 #ifdef ALX_BENCHMARK_INTERNAL
@@ -50,11 +51,11 @@ class lce_sss {
 #endif
 #endif
 
-    m_sync_set = rolling_hash::sss<t_index_type, t_tau>(text, size);
+    m_sync_set = rolling_hash::sss<t_index_type, t_tau>(text, size, true);
     // check_string_synchronizing_set(text, m_sync_set);
 
 #ifdef ALX_BENCHMARK_INTERNAL
-    fmt::print(" sss_construct_time={}", t.get());
+    fmt::print(" sss_construct_time={}", t.get_and_reset());
     fmt::print(" sss_size={}", m_sync_set.size());
     fmt::print(" sss_runs={}", m_sync_set.num_runs());
 
@@ -65,119 +66,102 @@ class lce_sss {
 #endif
 
 #ifdef ALX_BENCHMARK_INTERNAL
-    begin = std::chrono::system_clock::now();
 #ifdef ALX_MEASURE_SPACE
     mem_before = malloc_count_current();
     malloc_count_reset_peak();
 #endif
 
 #endif
-    /*
-        ind_ = std::make_unique<
-            stash::pred::index_par<std::vector<sss_type>, sss_type, 7>>(
-            sync_set_.get_sss());
-    */
+    m_pred = alx::pred::pred_index<t_index_type, 7, t_index_type>(
+        m_sync_set.get_sss());
 
 #ifdef ALX_BENCHMARK_INTERNAL
-    fmt::print(" pred_construct_time={}", t.get());
+    fmt::print(" pred_construct_time={}", t.get_and_reset());
 #ifdef ALX_MEASURE_SPACE
     fmt::print(" pred_construct_mem={}", malloc_count_current() - mem_before);
     fmt::print(" pred_construct_mem_peak={}", malloc_count_peak() - mem_before);
 #endif
 #endif
 
-    /*
-    lce_rmq_ = std::make_unique<Lce_rmq_par<sss_type, kTau>>(
-        text_.data(), text_length_in_bytes_, sync_set_);
+    std::vector<uint128_t> const& fps = m_sync_set.get_fps();
+    m_fp_lce = alx::lce::lce_classic<uint128_t, t_index_type>(fps);
+    // free fps from sync set
 
-    */
+#ifdef ALX_BENCHMARK_INTERNAL
+    fmt::print(" fp_lce_construct_time={}", t.get_and_reset());
+#ifdef ALX_MEASURE_SPACE
+    fmt::print(" fp_lce_construct_mem={}", malloc_count_current() - mem_before);
+    fmt::print(" fp_lce_construct_mem_peak={}",
+               malloc_count_peak() - mem_before);
+#endif
+#endif
   }
 
   template <typename C>
-  lce_sss(C const& container) : lce_sss(container.data(), container.size()) {
+  lce_sss(C const& container)
+      : lce_sss(container.data(), container.size()) {
   }
 
   // Return the number of common letters in text[i..] and text[j..].
   size_t lce(size_t i, size_t j) const {
-    /*if (i == j) [[unlikely]] {
+    if (i == j) [[unlikely]] {
       assert(i < m_size);
       return m_size - i;
     }
     return lce_uneq(i, j);
-    */
-    return 0;
   }
 
   // Return the number of common letters in text[i..] and text[j..]. Here i
   // and j must be different.
   size_t lce_uneq(size_t i, size_t j) const {
-    /*
     assert(i != j);
-    
+
     size_t l = std::min(i, j);
     size_t r = std::max(i, j);
 
-    return lce_lr(l, r);*/
-    return 0;
+    return lce_lr(l, r);
   }
 
   // Return the number of common letters in text[i..] and text[j..].
   // Here l must be smaller than r.
-  inline uint64_t lce_lr(size_t i, size_t j) const {
-    return 0;
-    /*if (TLX_UNLIKELY(i == j)) {
-      return text_length_in_bytes_ - i;
-    }
-    if (i > j) {
-      std::swap(i, j);
-    }
+  inline uint64_t lce_lr(size_t l, size_t r) const {
+    // Naive part until synchronizing position
 
-    // naive part
-    uint64_t const sync_length = 3 * kTau;
-    uint64_t const max_length =
-        std::min(sync_length, text_length_in_bytes_ - j);
-    uint64_t lce = 0;
-    for (; lce < 8; ++lce) {
-      if (TLX_UNLIKELY(lce >= max_length)) {
-        return max_length;
-      }
-      if (text_[i + lce] != text_[j + lce]) {
-        return lce;
-      }
+    size_t lce_max{m_size - r};
+    size_t lce_local_max{std::min(3 * t_tau, lce_max)};
+    size_t lce_local = alx::lce::lce_naive_wordwise<t_char_type>::lce_lr(
+        m_text, r + lce_local_max, l, r);
+
+    if (lce_local < lce_local_max || lce_local == lce_max) {
+      return lce_local;
     }
 
-    lce = 0;
-    uint128_t const* const text_blocks_i =
-        reinterpret_cast<uint128_t const*>(text_.data() + i);
-    uint128_t const* const text_blocks_j =
-        reinterpret_cast<uint128_t const*>(text_.data() + j);
-    for (; lce < max_length / 16; ++lce) {
-      if (text_blocks_i[lce] != text_blocks_j[lce]) {
-        lce *= 16;
-        // The last block did not match. Here we compare its single characters
-        uint64_t lce_end = std::min(lce + 16, max_length);
-        for (; lce < lce_end; ++lce) {
-          if (text_[i + lce] != text_[j + lce]) {
-            return lce;
-          }
-        }
-        return lce;
-      }
-    }
-    lce *= 16;
+    // From synchronizing position
+    std::vector<t_index_type> const& sss = m_sync_set.get_sss();
+    std::vector<uint128_t> const& fps = m_sync_set.get_fps();
 
-    // strSync part
-    uint64_t const i_ = suc(i + 1);
-    uint64_t const j_ = suc(j + 1);
+    size_t l_ = m_pred.successor(l).pos;
+    size_t r_ = m_pred.successor(r).pos;
 
-    uint64_t const i_diff = sync_set_[i_] - i;
-    uint64_t const j_diff = sync_set_[j_] - j;
+    //if (l_ - l != r_ - r) {
+    //  return
+    //}
 
-    if (i_diff == j_diff) {
-      return i_diff + lce_rmq_->lce(i_, j_);
-    } else {
-      return std::min(i_diff, j_diff) + 2 * kTau - 1;
-    }*/
+    size_t block_lce = m_fp_lce.lce_lr(l_, r_);
+    assert(block_lce == alx::lce::lce_naive_std<uint128_t>::lce_lr(
+                            fps.data(), fps.size(), l_, r_));
+
+    size_t l_mm = std::min(sss[l_ + block_lce - 1] + 3 * t_tau, m_size);
+    size_t r_mm = std::min(sss[r_ + block_lce - 1] + 3 * t_tau, m_size);
+    size_t min_lce = std::min(l_mm - l, r_mm - r);
+
+    size_t final_lce =
+        min_lce + alx::lce::lce_naive_wordwise<t_char_type>::lce_lr(
+                      m_text, m_size, l + min_lce, r + min_lce);
+
+    assert(final_lce == alx::lce::lce_naive_wordwise<t_char_type>::lce_lr(
+                            m_text, m_size, l, r));
+    return final_lce;
   }
 
   // Return {b, lce}, where lce is the number of common letters in text[i..]
@@ -205,22 +189,6 @@ class lce_sss {
         ((j + lce_val != m_size) && m_text[i + lce_val] < m_text[j + lce_val]));
   }
 
-  // Return {b, lce}, where lce is the lce of text[i..i+lce) and
-  // text[j..j+lce] and b tells whether the lce ends with a mismatch.
-  size_t lce_up_to(size_t i, size_t j, size_t up_to) {
-    if (i == j) [[unlikely]] {
-      assert(i < m_size);
-      return m_size - i;
-    }
-
-    size_t l = std::min(i, j);
-    size_t r = std::max(i, j);
-
-    size_t lce_max = std::min(r + up_to, m_size) - r;
-    size_t lce = lce_lr(l, r);  // doesnt work that easy
-    return lce;
-  }
-
   char_type operator[](size_t i) {
     return m_text[i];
   }
@@ -229,36 +197,14 @@ class lce_sss {
     return m_size;
   }
 
-  // size_t sss_size() {
-  //   return m_sync_set.size();
-  // }
-
-  // std::vector<sss_type> getSyncSet() {
-  //   return sync_set_.get_sss();
-  // }
-
-  // void print_sss() {
-  //   std::ofstream of("/tmp/sss", std::ios::trunc);
-  //   for (auto i : sync_set_.get_sss()) {
-  //     of << i << "\n";
-  //   }
-  // }
-
  private:
-  /* Finds the smallest element that is greater or equal to i
-     Because s_ is ordered, that is equal to the
-     first element greater than i */
-  // inline sss_type suc(sss_type i) const {
-  //   return m_ind->successor(i).pos;
-  // }
-
  private:
   char_type const* m_text;
   size_t m_size;
 
-  // stash::pred::index_par<std::vector<sss_type>, sss_type, 7> m_pred;
+  alx::pred::pred_index<t_index_type, 7, t_index_type> m_pred;
   rolling_hash::sss<t_index_type, t_tau> m_sync_set;
-  // lce_rmq_par<sss_type, t_tau> m_lce_rmq;
+  alx::lce::lce_classic<uint128_t, t_index_type> m_fp_lce;
 };
 }  // namespace alx::lce
 /******************************************************************************/

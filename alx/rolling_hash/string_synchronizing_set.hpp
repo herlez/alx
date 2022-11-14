@@ -92,6 +92,18 @@ class sss {
       if (m_fps_calculated) {
         std::copy(fps_part[t].begin(), fps_part[t].end(),
                   m_fps.begin() + write_pos[t]);
+#pragma omp barrier
+        // add distance to positions that start periodic area
+        if (m_runs_detected && m_fps_calculated && !fps_part[t].empty() &&
+            write_pos[t] != 0) {
+          size_t i = m_sss[write_pos[t]];
+          size_t prev_i = m_sss[write_pos[t] - 1];
+          size_t distance = i - prev_i;
+          assert(distance < (size_t{1} << 20));
+          if (distance > t_tau) {
+            m_fps[write_pos[t] - 1] += (uint128_t{distance} << 107);
+          }
+        }
       }
     }
     if (m_runs_detected) {
@@ -265,6 +277,16 @@ class sss {
         sss.push_back(i);
         if (m_fps_calculated) {
           fps.push_back(fingerprints3[i]);
+          // add distance to positions that start periodic area
+          if (sss.size() > 1) {
+            size_t prev_i = sss[sss.size() - 2];
+            size_t distance = i - prev_i;
+            // we only have 20 empty bits in fingerprint
+            assert(distance < (size_t{1} << 20));
+            if (distance > t_tau) {
+              fps[sss.size() - 2] += (uint128_t{distance} << 107);
+            }
+          }
         }
       }
     }
