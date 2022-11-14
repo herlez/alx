@@ -20,6 +20,7 @@
 #include "lce/lce_rk_prezza.hpp"
 #include "lce/lce_sss_naive.hpp"
 #include "lce/lce_sss_noss.hpp"
+#include "lce/lce_sss.hpp"
 
 template <typename lce_ds_type>
 void test_empty_constructor() {
@@ -59,6 +60,29 @@ void test_simple() {
   text = text_copy;
 }
 
+template <typename lce_ds_type>
+void test_simple_classic_for_sss() {
+  std::vector<uint8_t> text(2000);
+  std::iota(text.begin(), text.begin() + 1000,
+            std::numeric_limits<uint8_t>::max() / 2);
+  std::iota(text.begin() + 1000, text.end(),
+            std::numeric_limits<uint8_t>::max() / 2);
+  for (auto& c : text) {
+    if (c == numeric_limits<uint8_t>::max()) {
+      c = 0;
+    }
+  }
+  std::vector<uint32_t> sss{0, 500, 1000};
+  std::vector<uint32_t> fps_reduced{2, 0, 1};
+  std::vector<uint8_t> text_copy = text;
+  // Test pointer constructor
+  {
+    lce_ds_type ds(text.data(), text.size(), fps_reduced.data(), fps_reduced.size(), sss);
+    EXPECT_EQ(ds.lce_uneq(0, 2), 1000);
+    EXPECT_EQ(ds.lce_uneq(1, 2), 0);
+  }
+  text = text_copy;
+}
 template <typename lce_ds_type>
 void test_suffix_sorting() {
   typedef typename lce_ds_type::char_type char_typee;
@@ -236,6 +260,10 @@ TEST(LceClassic, All) {
   // test_variants<alx::lce::lce_classic<__int128_t>, true, true, true,
   // false>();
 }
+TEST(LceClassicSss, All) {
+  test_empty_constructor<alx::lce::lce_classic_for_sss<uint32_t, 1024>>();
+  test_simple_classic_for_sss<alx::lce::lce_classic_for_sss<uint32_t, 1024>>();
+}
 
 TEST(LceSssNaive, All) {
   test_empty_constructor<alx::lce::lce_sss_naive<uint8_t, 16>>();
@@ -289,16 +317,31 @@ TEST(LceSssNoSs, All) {
   // test_variants<alx::lce::lce_sss_noss<__int128_t, 16>>();
 }
 
-/*TEST(LceSss, All) {
-  test_empty_constructor<alx::lce::lce_sss<unsigned char, 16>>();
-  test_simple<alx::lce::lce_sss<unsigned char, 16>>();
-  test_simple<alx::lce::lce_sss<char, 16>>();
-  test_simple<alx::lce::lce_sss<uint8_t, 16>>();
+TEST(LceSss, All) {
+  test_empty_constructor<alx::lce::lce_sss<uint8_t, 16>>();
 
-  test_variants<alx::lce::lce_sss<unsigned char, 16>>();
-  test_variants<alx::lce::lce_sss<char, 16>>();
-  test_variants<alx::lce::lce_sss<uint8_t, 16>>();
-}*/
+  test_simple<alx::lce::lce_sss<uint8_t, 16>>();
+  test_simple<alx::lce::lce_sss<int8_t, 16>>();
+  // test_simple<alx::lce::lce_sss<uint16_t, 16>>();
+  // test_simple<alx::lce::lce_sss<int16_t, 16>>();
+  // test_simple<alx::lce::lce_sss<uint32_t, 16>>();
+  // test_simple<alx::lce::lce_sss<int32_t, 16>>();
+  // test_simple<alx::lce::lce_sss<uint64_t, 16>>();
+  // test_simple<alx::lce::lce_sss<int64_t, 16>>();
+  // test_simple<alx::lce::lce_sss<__uint128_t, 16>>();
+  // test_simple<alx::lce::lce_sss<__int128_t, 16>>();
+
+  test_variants<alx::lce::lce_sss<uint8_t, 16>, true, true, true, false>();
+  test_variants<alx::lce::lce_sss<int8_t, 16>, true, true, true, false>();
+  // test_variants<alx::lce::lce_sss<uint16_t, 16>>();
+  // test_variants<alx::lce::lce_sss<int16_t, 16>>();
+  // test_variants<alx::lce::lce_sss<uint32_t, 16>>();
+  // test_variants<alx::lce::lce_sss<int32_t, 16>>();
+  // test_variants<alx::lce::lce_sss<uint64_t, 16>>();
+  // test_variants<alx::lce::lce_sss<int64_t, 16>>();
+  // test_variants<alx::lce::lce_sss<__uint128_t, 16>>();
+  // test_variants<alx::lce::lce_sss<__int128_t, 16>>();
+}
 
 TEST(LceMemcmp, SS) {
   test_empty_constructor<alx::lce::lce_memcmp>();

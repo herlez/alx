@@ -13,6 +13,7 @@
 #include <memory>
 #include <vector>
 
+#include "lce/lce_classic_for_sss.hpp"
 #include "lce/lce_naive_wordwise.hpp"
 #include "pred/pred_index.hpp"
 #include "rolling_hash/string_synchronizing_set.hpp"
@@ -85,9 +86,12 @@ class lce_sss {
     std::vector<uint128_t> const& fps = m_sync_set.get_fps();
     std::vector<t_index_type> const& sss = m_sync_set.get_sss();
 
-    std::vector<uint32_t> reduced_fps(m_text, m_size, sss, fps);
-    m_fp_lce = alx::lce::lce_classic_for_sss<uint128_t, t_index_type, t_char_type, size_t>(m_text, m_size, sss, reduced_fps);
-    // free fps from sync set
+    std::vector<t_index_type>
+        reduced_fps;  //= reduce_fps(m_text, m_size, sss, fps);
+    m_fp_lce = alx::lce::lce_classic_for_sss<t_index_type, t_tau>(
+        reinterpret_cast<uint8_t const*>(m_text), m_size, reduced_fps.data(),
+        reduced_fps.size(), sss);
+    m_sync_set.free_fps();
 
 #ifdef ALX_BENCHMARK_INTERNAL
     fmt::print(" fp_lce_construct_time={}", t.get_and_reset());
@@ -217,7 +221,7 @@ class lce_sss {
 
   alx::pred::pred_index<t_index_type, 7, t_index_type> m_pred;
   rolling_hash::sss<t_index_type, t_tau> m_sync_set;
-  alx::lce::lce_classic<uint128_t, t_index_type> m_fp_lce;
+  alx::lce::lce_classic_for_sss<t_index_type, t_tau> m_fp_lce;
 };
 }  // namespace alx::lce
 /******************************************************************************/

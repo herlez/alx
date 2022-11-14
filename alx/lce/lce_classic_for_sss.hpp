@@ -1,5 +1,5 @@
 /*******************************************************************************
- * alx/lce/lce_classic.hpp
+ * alx/lce/lce_classic_for_sss.hpp
  *
  * Copyright (C) 2022 Alexander Herlez <alexander.herlez@tu-dortmund.de>
  *
@@ -29,16 +29,17 @@
 
 namespace alx::lce {
 
-template <typename t_char_type = uint8_t, typename t_index_type = uint32_t>
-class lce_classic {
+template <typename t_index_type, size_t t_tau>
+class lce_classic_for_sss {
  public:
-  typedef t_char_type char_type;
-
-  lce_classic() : m_text(nullptr), m_size(0) {
+  lce_classic_for_sss() : m_size{0} {
   }
 
-  lce_classic(char_type const* text, size_t size) : m_text(text), m_size(size) {
-    std::vector<t_index_type> sa(size);
+  lce_classic_for_sss(uint8_t const* text, size_t text_size,
+                      t_index_type const* reduced_fps, size_t reduced_fps_size,
+                      std::vector<t_index_type> const& sss)
+      : m_size(reduced_fps_size) {
+    std::vector<t_index_type> sa(reduced_fps_size);
     // sort sa
 #ifdef ALX_BENCHMARK_INTERNAL
     alx::util::timer t;
@@ -47,7 +48,8 @@ class lce_classic {
     malloc_count_reset_peak();
 #endif
 #endif
-    gsaca_for_lce(text, sa.data(), size);
+    gsaca_for_lce(reduced_fps, sa.data(), reduced_fps_size);
+
 #ifdef ALX_BENCHMARK_INTERNAL
     fmt::print(" gsaca_time={}", t.get_and_reset());
 #ifdef ALX_MEASURE_SPACE
@@ -57,7 +59,7 @@ class lce_classic {
 #endif
 
     // build isa
-    m_isa.resize(size);
+    m_isa.resize(reduced_fps_size);
 #pragma omp parallel for
     for (size_t i = 0; i < sa.size(); ++i) {
       m_isa[sa[i]] = i;
@@ -72,10 +74,10 @@ class lce_classic {
     {
       const int t = omp_get_thread_num();
       const int nt = omp_get_num_threads();
-      const size_t slice_size = size / nt;
+      const size_t slice_size = reduced_fps_size / nt;
 
       const size_t begin = t * slice_size;
-      const size_t end = (t < nt - 1) ? (t + 1) * slice_size : size;
+      const size_t end = (t < nt - 1) ? (t + 1) * slice_size : reduced_fps_size;
 
       size_t current_lcp = 0;
       for (size_t i{begin}; i < end; ++i) {
@@ -86,33 +88,24 @@ class lce_classic {
         assert(suffix_array_pos != 0);
 
         size_t preceding_suffix_pos = sa[suffix_array_pos - 1];
-        current_lcp += lce_naive_wordwise<char_type>::lce_uneq(
-            text, size, i + current_lcp, preceding_suffix_pos + current_lcp);
+        current_lcp += lce_naive_wordwise<uint8_t>::lce_uneq(
+            text, text_size, sss[i] + current_lcp,
+            sss[preceding_suffix_pos] + current_lcp);
         m_lcp[suffix_array_pos] = current_lcp;
-        assert(lce_naive_wordwise<char_type>::lce_uneq(
-                   text, size, i, preceding_suffix_pos) == current_lcp);
+        assert(lce_naive_wordwise<uint8_t>::lce_uneq(
+                   text, text_size, sss[i], sss[preceding_suffix_pos]) ==
+               current_lcp);
 
-        if (current_lcp != 0) {
-          --current_lcp;
+        uint64_t diff = sss[i + 1] - sss[i];
+        if (current_lcp < 2 * t_tau + diff) {
+          current_lcp = 0;
+        } else {
+          current_lcp -= diff;
         }
       }
     }
     // built rmq
     m_rmq = alx::rmq::rmq_nlgn<t_index_type>(m_lcp);
-  }
-
-  template <typename C>
-  lce_classic(C const& container)
-      : lce_classic(container.data(), container.size()) {
-  }
-
-  // Return the number of common letters in text[i..] and text[j..].
-  size_t lce(size_t i, size_t j) const {
-    if (i == j) [[unlikely]] {
-      assert(i < m_size);
-      return m_size - i;
-    }
-    return lce_uneq(i, j);
   }
 
   // Return the number of common letters in text[i..] and text[j..]. Here i and
@@ -128,36 +121,10 @@ class lce_classic {
     return m_lcp[m_rmq.rmq_shifted(m_isa[l], m_isa[r])];
   }
 
-  // Return {b, lce}, where lce is the number of common letters in text[i..]
-  // and text[j..] and b tells whether the lce ends with a mismatch.
-  std::pair<bool, size_t> lce_mismatch(size_t i, size_t j) {
-    if (i == j) [[unlikely]] {
-      assert(i < m_size);
-      return {false, m_size - i};
-    }
-    size_t l = std::min(i, j);
-    size_t r = std::max(i, j);
-
-    size_t lce = lce_lr(l, r);
-    return {r + lce != m_size, lce};
-  }
-
-  // Return whether text[i..] is lexicographic smaller than text[j..]. Here i
-  // and j must be different.
-  bool is_leq_suffix(size_t i, size_t j) {
-    assert(i != j);
-    size_t lce_val = lce_uneq(i, j);
-    return (
-        i + lce_val == m_size ||
-        ((j + lce_val != m_size) && m_text[i + lce_val] < m_text[j + lce_val]));
-  }
-
  private:
+  size_t m_size;
   std::vector<t_index_type> m_isa;
   std::vector<t_index_type> m_lcp;
-
-  char_type const* m_text;
-  size_t m_size;
   alx::rmq::rmq_nlgn<t_index_type> m_rmq;
 };
 

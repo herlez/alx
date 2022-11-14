@@ -28,7 +28,12 @@ target_link_libraries(alx_lce INTERFACE alx_lce_fp)
 add_library(alx_lce_sss_naive INTERFACE)
 target_include_directories(alx_lce_sss_naive INTERFACE ${ALX_INCLUDE_DIR})
 target_link_libraries(alx_lce_sss_naive INTERFACE alx_string_synchronizing_set alx_pred_index)
-target_link_libraries(alx_lce INTERFACE alx_lce_sss)
+target_link_libraries(alx_lce INTERFACE alx_lce_sss_naive)
+
+add_library(alx_lce_sss_noss INTERFACE)
+target_include_directories(alx_lce_sss_noss INTERFACE ${ALX_INCLUDE_DIR})
+target_link_libraries(alx_lce_sss_noss INTERFACE alx_string_synchronizing_set alx_pred_index)
+target_link_libraries(alx_lce INTERFACE alx_lce_sss_noss)
 
 add_library(alx_lce_sss INTERFACE)
 target_include_directories(alx_lce_sss INTERFACE ${ALX_INCLUDE_DIR})
@@ -40,12 +45,8 @@ target_include_directories(alx_lce_classic INTERFACE ${ALX_INCLUDE_DIR})
 target_link_libraries(alx_lce_classic INTERFACE gsaca_ds libsais64 libsais alx_rmq fmt::fmt-header-only)
 target_link_libraries(alx_lce INTERFACE alx_lce_classic)
 
-#add_library(alx_lce_noss INTERFACE)
-#target_include_directories(alx_lce_noss INTERFACE ${ALX_INCLUDE_DIR})
-#target_link_libraries(alx_lce_sss INTERFACE alx_string_synchronizing_set alx_pred_index)
-#target_link_libraries(alx_lce INTERFACE alx_lce_sss)
+add_library(alx_lce_classic_for_sss INTERFACE)
+target_include_directories(alx_lce_classic_for_sss INTERFACE ${ALX_INCLUDE_DIR})
+target_link_libraries(alx_lce_classic_for_sss INTERFACE gsaca_ds libsais64 libsais alx_rmq fmt::fmt-header-only)
+target_link_libraries(alx_lce INTERFACE alx_lce_classic_for_sss)
 
-
-#TODO: 
-# Comments & Structure
-# Build data structures so that they handle wider text symbols
