@@ -85,7 +85,7 @@ class lce_sss_noss {
 
     std::vector<uint128_t> const& fps = m_sync_set.get_fps();
     m_fp_lce = alx::lce::lce_classic<uint128_t, t_index_type>(fps);
-    // free fps from sync set
+    m_sync_set.free_fps();
 
 #ifdef ALX_BENCHMARK_INTERNAL
     fmt::print(" fp_lce_construct_time={}", t.get_and_reset());

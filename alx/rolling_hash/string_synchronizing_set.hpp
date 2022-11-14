@@ -401,6 +401,10 @@ class sss {
     assert(m_fps_calculated);
     return m_fps;
   }
+  void free_fps() {
+    m_fps.clear();
+    m_fps_calculated = false;
+  }
 
   size_t num_runs() const {
     return m_run_info.size();
