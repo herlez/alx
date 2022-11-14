@@ -118,6 +118,7 @@ class lce_sss_naive {
     size_t lce_local = alx::lce::lce_naive_wordwise<t_char_type>::lce_lr(
         m_text, r + lce_local_max, l, r);
 
+    // Case 0: Mismatch at first 3*tau symbols
     if (lce_local < lce_local_max || lce_local == lce_max) {
       return lce_local;
     }
@@ -144,11 +145,11 @@ class lce_sss_naive {
       return std::min(sss[l__ + 1] - l, sss[r__ + 1] - r) + 2 * t_tau - 1;
     }
 
-    size_t l_mm = std::min(sss[l__-1] + 3 * t_tau, m_size);
-    size_t r_mm = std::min(sss[r__-1] + 3 * t_tau, m_size);
+    size_t l_mm = std::min(sss[l__ - 1] + 3 * t_tau, m_size);
+    size_t r_mm = std::min(sss[r__ - 1] + 3 * t_tau, m_size);
     size_t min_lce = std::min(l_mm - l, r_mm - r);
 
-    // Case 3: Positions l' and r' are no connected with runs.
+    // Case 3: Positions l' and r' are not connected with runs.
     size_t final_lce =
         min_lce + alx::lce::lce_naive_wordwise<t_char_type>::lce_lr(
                       m_text, m_size, l + min_lce, r + min_lce);

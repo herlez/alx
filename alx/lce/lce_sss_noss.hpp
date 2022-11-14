@@ -132,6 +132,7 @@ class lce_sss_noss {
     size_t lce_local = alx::lce::lce_naive_wordwise<t_char_type>::lce_lr(
         m_text, r + lce_local_max, l, r);
 
+    // Case 0: Mismatch at first 3*tau symbols
     if (lce_local < lce_local_max || lce_local == lce_max) {
       return lce_local;
     }
@@ -143,17 +144,28 @@ class lce_sss_noss {
     size_t l_ = m_pred.successor(l).pos;
     size_t r_ = m_pred.successor(r).pos;
 
-    //if (l_ - l != r_ - r) {
-    //  return
-    //}
+    // Case 1: Positions l and r and in the middle of a run.
+    if (sss[l_] - l != sss[r_] - r) {
+      return std::min(sss[l_] - l, sss[r_] - r) + 2 * t_tau - 1;
+    }
 
     size_t block_lce = m_fp_lce.lce_lr(l_, r_);
     assert(block_lce == alx::lce::lce_naive_std<uint128_t>::lce_lr(
                             fps.data(), fps.size(), l_, r_));
 
-    size_t l_mm = std::min(sss[l_ + block_lce - 1] + 3 * t_tau, m_size);
-    size_t r_mm = std::min(sss[r_ + block_lce - 1] + 3 * t_tau, m_size);
+    size_t l__ = l_ + block_lce;
+    size_t r__ = r_ + block_lce;
+    // Case 2: Positions l' and r' are at the start of a run.
+    if (r__ + 1 < sss.size() && sss[l__ + 1] - sss[l__] > 3 * t_tau &&
+        sss[r__ + 1] - sss[r__] > 3 * t_tau) {
+      return std::min(sss[l__ + 1] - l, sss[r__ + 1] - r) + 2 * t_tau - 1;
+    }
+
+    size_t l_mm = std::min(sss[l__ - 1] + 3 * t_tau, m_size);
+    size_t r_mm = std::min(sss[r__ - 1] + 3 * t_tau, m_size);
     size_t min_lce = std::min(l_mm - l, r_mm - r);
+
+    // Case 3: Positions l' and r' are not connected with runs.
 
     size_t final_lce =
         min_lce + alx::lce::lce_naive_wordwise<t_char_type>::lce_lr(
