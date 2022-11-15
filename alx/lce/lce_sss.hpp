@@ -92,8 +92,7 @@ class lce_sss {
     fmt::print(" meta_symbols_time={}", t.get_and_reset());
 #ifdef ALX_MEASURE_SPACE
     fmt::print(" meta_reduction_mem={}", malloc_count_current() - mem_before);
-    fmt::print(" meta_reduction_mem_peak={}",
-               malloc_count_peak() - mem_before);
+    fmt::print(" meta_reduction_mem_peak={}", malloc_count_peak() - mem_before);
 #endif
 #endif
 
@@ -104,7 +103,8 @@ class lce_sss {
 #ifdef ALX_BENCHMARK_INTERNAL
     fmt::print(" meta_lce_construct_time={}", t.get_and_reset());
 #ifdef ALX_MEASURE_SPACE
-    fmt::print(" meta_lce_construct_mem={}", malloc_count_current() - mem_before);
+    fmt::print(" meta_lce_construct_mem={}",
+               malloc_count_current() - mem_before);
     fmt::print(" meta_lce_construct_mem_peak={}",
                malloc_count_peak() - mem_before);
 #endif
@@ -139,7 +139,6 @@ class lce_sss {
   // Here l must be smaller than r.
   inline uint64_t lce_lr(size_t l, size_t r) const {
     // Naive part until synchronizing position
-
     size_t lce_max{m_size - r};
     size_t lce_local_max{std::min(3 * t_tau, lce_max)};
     size_t lce_local = alx::lce::lce_naive_wordwise<t_char_type>::lce_lr(
@@ -157,11 +156,12 @@ class lce_sss {
     size_t r_ = m_pred.successor(r).pos;
 
     if (sss[l_] - l != sss[r_] - r) {
-      // Case 1: Positions l and r and in the middle of a run.
+      // Case 1: Positions l' and r' don't sync, (because they are at the end of
+      // runs).
       return std::min(sss[l_] - l, sss[r_] - r) + 2 * t_tau - 1;
     } else {
       // Case 2: Positions l' and r' are synchronized.
-      return (sss[l_]-l) + m_fp_lce.lce_lr(l_, r_);
+      return (sss[l_] - l) + m_fp_lce.lce_lr(l_, r_);
     }
   }
 

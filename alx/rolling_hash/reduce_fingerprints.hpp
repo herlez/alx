@@ -48,7 +48,7 @@ std::vector<typename sss_type::index_type> reduce_fps_3tau_lexicographic(
   std::vector<index_type> sss_sorted = sss;
   std::sort(sss_sorted.begin(), sss_sorted.end(),
             [&text, &text_size, &sync_set](auto lhs, auto rhs) {
-              size_t lce = lce_naive_wordwise<uint8_t>::lce_up_to(
+              /*size_t lce = lce_naive_wordwise<uint8_t>::lce_up_to(
                   text, text_size, lhs, rhs, 3 * tau);
               if (std::max(lhs, rhs) + lce == text_size) {
                 return lhs > rhs;
@@ -56,7 +56,9 @@ std::vector<typename sss_type::index_type> reduce_fps_3tau_lexicographic(
               if (text[lhs + lce] < text[rhs + lce]) {
                 return true;
               }
-              return sync_set.get_run_info(lhs) < sync_set.get_run_info(rhs);
+              return sync_set.get_run_info(lhs) < sync_set.get_run_info(rhs);*/
+              return lce_naive_wordwise<uint8_t>::is_leq_suffix(text, text_size,
+                                                                lhs, rhs);
             });
 
   for (size_t idx = 1; idx < sss_sorted.size(); ++idx) {
