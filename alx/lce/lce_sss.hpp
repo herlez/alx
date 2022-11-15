@@ -16,6 +16,7 @@
 #include "lce/lce_classic_for_sss.hpp"
 #include "lce/lce_naive_wordwise.hpp"
 #include "pred/pred_index.hpp"
+#include "rolling_hash/reduce_fingerprints.hpp"
 #include "rolling_hash/string_synchronizing_set.hpp"
 
 #ifdef ALX_BENCHMARK_INTERNAL
@@ -86,8 +87,8 @@ class lce_sss {
     std::vector<uint128_t> const& fps = m_sync_set.get_fps();
     std::vector<t_index_type> const& sss = m_sync_set.get_sss();
 
-    std::vector<t_index_type>
-        reduced_fps;  //= reduce_fps(m_text, m_size, sss, fps);
+    std::vector<t_index_type> reduced_fps = reduce_fps_3tau_lexicographic(
+        reinterpret_cast<uint8_t const*>(m_text), m_size, m_sync_set);
     m_fp_lce = alx::lce::lce_classic_for_sss<t_index_type, t_tau>(
         reinterpret_cast<uint8_t const*>(m_text), m_size, reduced_fps.data(),
         reduced_fps.size(), sss);
@@ -149,36 +150,13 @@ class lce_sss {
     size_t l_ = m_pred.successor(l).pos;
     size_t r_ = m_pred.successor(r).pos;
 
-    // Case 1: Positions l and r and in the middle of a run.
     if (sss[l_] - l != sss[r_] - r) {
+      // Case 1: Positions l and r and in the middle of a run.
       return std::min(sss[l_] - l, sss[r_] - r) + 2 * t_tau - 1;
+    } else {
+      // Case 2: Positions l' and r' are synchronized.
+      return lce_local + m_fp_lce.lce_lr(l_, r_);
     }
-
-    size_t block_lce = m_fp_lce.lce_lr(l_, r_);
-    assert(block_lce == alx::lce::lce_naive_std<uint128_t>::lce_lr(
-                            fps.data(), fps.size(), l_, r_));
-
-    size_t l__ = l_ + block_lce;
-    size_t r__ = r_ + block_lce;
-    // Case 2: Positions l' and r' are at the start of a run.
-    if (r__ + 1 < sss.size() && sss[l__ + 1] - sss[l__] > 3 * t_tau &&
-        sss[r__ + 1] - sss[r__] > 3 * t_tau) {
-      return std::min(sss[l__ + 1] - l, sss[r__ + 1] - r) + 2 * t_tau - 1;
-    }
-
-    size_t l_mm = std::min(sss[l__ - 1] + 3 * t_tau, m_size);
-    size_t r_mm = std::min(sss[r__ - 1] + 3 * t_tau, m_size);
-    size_t min_lce = std::min(l_mm - l, r_mm - r);
-
-    // Case 3: Positions l' and r' are not connected with runs.
-
-    size_t final_lce =
-        min_lce + alx::lce::lce_naive_wordwise<t_char_type>::lce_lr(
-                      m_text, m_size, l + min_lce, r + min_lce);
-
-    assert(final_lce == alx::lce::lce_naive_wordwise<t_char_type>::lce_lr(
-                            m_text, m_size, l, r));
-    return final_lce;
   }
 
   // Return {b, lce}, where lce is the number of common letters in text[i..]

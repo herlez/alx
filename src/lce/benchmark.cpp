@@ -29,6 +29,7 @@
 #include "lce/lce_rk_prezza.hpp"
 #include "lce/lce_sss_naive.hpp"
 #include "lce/lce_sss_noss.hpp"
+#include "lce/lce_sss.hpp"
 #include "util/io.hpp"
 #include "util/timer.hpp"
 
@@ -278,28 +279,33 @@ int main(int argc, char** argv) {
     return -1;
   }
 
-  b.run<alx::lce::lce_naive<>>("naive");
-  b.run<alx::lce::lce_naive_std<>>("naive_std");
+  // b.run<alx::lce::lce_naive<>>("naive");
+  // b.run<alx::lce::lce_naive_std<>>("naive_std");
   b.run<alx::lce::lce_naive_wordwise<>>("naive_wordwise");
-  b.run<alx::lce::lce_fp<uint8_t, 8>>("fp8");
-  b.run<alx::lce::lce_fp<uint8_t, 16>>("fp16");
+
+  // b.run<alx::lce::lce_fp<uint8_t, 8>>("fp8");
+  // b.run<alx::lce::lce_fp<uint8_t, 16>>("fp16");
   b.run<alx::lce::lce_fp<uint8_t, 32>>("fp32");
-  b.run<alx::lce::lce_fp<uint8_t, 64>>("fp64");
-  b.run<alx::lce::lce_fp<uint8_t, 128>>("fp128");
-  b.run<alx::lce::lce_fp<uint8_t, 256>>("fp256");
-  b.run<alx::lce::lce_fp<uint8_t, 512>>("fp512");
-  b.run<rklce::lce_rk_prezza>("rk-prezza");
-  b.run<alx::lce::lce_sss_naive<uint8_t, 256, uint64_t>>("sss_naive256");
+  // b.run<alx::lce::lce_fp<uint8_t, 64>>("fp64");
+  // b.run<alx::lce::lce_fp<uint8_t, 128>>("fp128");
+  // b.run<alx::lce::lce_fp<uint8_t, 256>>("fp256");
+  // b.run<alx::lce::lce_fp<uint8_t, 512>>("fp512");
+  // b.run<rklce::lce_rk_prezza>("rk-prezza");
+
+  // b.run<alx::lce::lce_sss_naive<uint8_t, 256, uint64_t>>("sss_naive256");
   b.run<alx::lce::lce_sss_naive<uint8_t, 512, uint64_t>>("sss_naive512");
-  b.run<alx::lce::lce_sss_naive<uint8_t, 1024, uint64_t>>("sss_naive1024");
-  b.run<alx::lce::lce_sss_naive<uint8_t, 2048, uint64_t>>("sss_naive2048");
-  b.run<alx::lce::lce_sss_noss<uint8_t, 256, uint64_t>>("sss_noss256");
+  // b.run<alx::lce::lce_sss_naive<uint8_t, 1024, uint64_t>>("sss_naive1024");
+  // b.run<alx::lce::lce_sss_naive<uint8_t, 2048, uint64_t>>("sss_naive2048");
+
+  // b.run<alx::lce::lce_sss_noss<uint8_t, 256, uint64_t>>("sss_noss256");
   b.run<alx::lce::lce_sss_noss<uint8_t, 512, uint64_t>>("sss_noss512");
-  b.run<alx::lce::lce_sss_noss<uint8_t, 1024, uint64_t>>("sss_noss1024");
-  b.run<alx::lce::lce_sss_noss<uint8_t, 2048, uint64_t>>("sss_noss2048");
+  // b.run<alx::lce::lce_sss_noss<uint8_t, 1024, uint64_t>>("sss_noss1024");
+  // b.run<alx::lce::lce_sss_noss<uint8_t, 2048, uint64_t>>("sss_noss2048");
+
   // b.run<alx::lce::lce_sss<uint8_t, 256, uint64_t>>("sss256");
-  // b.run<alx::lce::lce_sss<uint8_t, 512, uint64_t>>("sss512");
+  b.run<alx::lce::lce_sss<uint8_t, 512, uint64_t>>("sss512");
   // b.run<alx::lce::lce_sss<uint8_t, 1024, uint64_t>>("sss1024");
   // b.run<alx::lce::lce_sss<uint8_t, 2048, uint64_t>>("sss2048");
+  
   b.run<alx::lce::lce_classic<uint8_t, uint64_t>>("classic");
 }
