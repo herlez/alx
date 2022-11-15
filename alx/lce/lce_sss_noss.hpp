@@ -139,7 +139,6 @@ class lce_sss_noss {
 
     // From synchronizing position
     std::vector<t_index_type> const& sss = m_sync_set.get_sss();
-    std::vector<uint128_t> const& fps = m_sync_set.get_fps();
 
     size_t l_ = m_pred.successor(l).pos;
     size_t r_ = m_pred.successor(r).pos;
@@ -150,8 +149,6 @@ class lce_sss_noss {
     }
 
     size_t block_lce = m_fp_lce.lce_lr(l_, r_);
-    assert(block_lce == alx::lce::lce_naive_std<uint128_t>::lce_lr(
-                            fps.data(), fps.size(), l_, r_));
 
     size_t l__ = l_ + block_lce;
     size_t r__ = r_ + block_lce;

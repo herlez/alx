@@ -52,7 +52,7 @@ class lce_sss {
 #endif
 #endif
 
-    m_sync_set = rolling_hash::sss<t_index_type, t_tau>(text, size, true);
+    m_sync_set = rolling_hash::sss<t_index_type, t_tau>(text, size, false);
     // check_string_synchronizing_set(text, m_sync_set);
 
 #ifdef ALX_BENCHMARK_INTERNAL
@@ -84,21 +84,28 @@ class lce_sss {
 #endif
 #endif
 
-    std::vector<uint128_t> const& fps = m_sync_set.get_fps();
     std::vector<t_index_type> const& sss = m_sync_set.get_sss();
 
     std::vector<t_index_type> reduced_fps = reduce_fps_3tau_lexicographic(
         reinterpret_cast<uint8_t const*>(m_text), m_size, m_sync_set);
+#ifdef ALX_BENCHMARK_INTERNAL
+    fmt::print(" meta_symbols_time={}", t.get_and_reset());
+#ifdef ALX_MEASURE_SPACE
+    fmt::print(" meta_reduction_mem={}", malloc_count_current() - mem_before);
+    fmt::print(" meta_reduction_mem_peak={}",
+               malloc_count_peak() - mem_before);
+#endif
+#endif
+
     m_fp_lce = alx::lce::lce_classic_for_sss<t_index_type, t_tau>(
         reinterpret_cast<uint8_t const*>(m_text), m_size, reduced_fps.data(),
         reduced_fps.size(), sss);
-    m_sync_set.free_fps();
 
 #ifdef ALX_BENCHMARK_INTERNAL
-    fmt::print(" fp_lce_construct_time={}", t.get_and_reset());
+    fmt::print(" meta_lce_construct_time={}", t.get_and_reset());
 #ifdef ALX_MEASURE_SPACE
-    fmt::print(" fp_lce_construct_mem={}", malloc_count_current() - mem_before);
-    fmt::print(" fp_lce_construct_mem_peak={}",
+    fmt::print(" meta_lce_construct_mem={}", malloc_count_current() - mem_before);
+    fmt::print(" meta_lce_construct_mem_peak={}",
                malloc_count_peak() - mem_before);
 #endif
 #endif
@@ -145,7 +152,6 @@ class lce_sss {
 
     // From synchronizing position
     std::vector<t_index_type> const& sss = m_sync_set.get_sss();
-    std::vector<uint128_t> const& fps = m_sync_set.get_fps();
 
     size_t l_ = m_pred.successor(l).pos;
     size_t r_ = m_pred.successor(r).pos;
@@ -155,7 +161,7 @@ class lce_sss {
       return std::min(sss[l_] - l, sss[r_] - r) + 2 * t_tau - 1;
     } else {
       // Case 2: Positions l' and r' are synchronized.
-      return lce_local + m_fp_lce.lce_lr(l_, r_);
+      return (sss[l_]-l) + m_fp_lce.lce_lr(l_, r_);
     }
   }
 

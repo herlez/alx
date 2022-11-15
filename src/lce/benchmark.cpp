@@ -27,9 +27,9 @@
 #include "lce/lce_naive_std.hpp"
 #include "lce/lce_naive_wordwise.hpp"
 #include "lce/lce_rk_prezza.hpp"
+#include "lce/lce_sss.hpp"
 #include "lce/lce_sss_naive.hpp"
 #include "lce/lce_sss_noss.hpp"
-#include "lce/lce_sss.hpp"
 #include "util/io.hpp"
 #include "util/timer.hpp"
 
@@ -41,7 +41,9 @@ std::vector<std::string> algorithms{
     "fp64",           "fp128",         "fp256",        "fp512",
     "rk-prezza",      "sss_naive128",  "sss_naive256", "sss_naive512",
     "sss_naive1024",  "sss_naive2048", "sss_noss128",  "sss_noss256",
-    "sss_noss512",    "sss_noss1024",  "sss_noss2048", "classic"};
+    "sss_noss512",    "sss_noss1024",  "sss_noss2048", "sss128",
+    "sss256",         "sss512",        "sss1024",      "sss2048",
+    "classic"};
 std::vector<std::string> algorithms_main{
     "main", "naive",        "naive_std",   "naive_wordwise",
     "fp32", "sss_naive512", "sss_noss512", "classic"};
@@ -306,6 +308,6 @@ int main(int argc, char** argv) {
   b.run<alx::lce::lce_sss<uint8_t, 512, uint64_t>>("sss512");
   // b.run<alx::lce::lce_sss<uint8_t, 1024, uint64_t>>("sss1024");
   // b.run<alx::lce::lce_sss<uint8_t, 2048, uint64_t>>("sss2048");
-  
+
   b.run<alx::lce::lce_classic<uint8_t, uint64_t>>("classic");
 }
