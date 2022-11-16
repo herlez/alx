@@ -158,10 +158,16 @@ class lce_sss {
     if (sss[l_] - l != sss[r_] - r) {
       // Case 1: Positions l' and r' don't sync, (because they are at the end of
       // runs).
-      return std::min(sss[l_] - l, sss[r_] - r) + 2 * t_tau - 1;
+      size_t final_lce = std::min(sss[l_] - l, sss[r_] - r) + 2 * t_tau - 1;
+      assert(final_lce == alx::lce::lce_naive_wordwise<t_char_type>::lce_lr(
+                              m_text, m_size, l, r));
+      return final_lce;
     } else {
       // Case 2: Positions l' and r' are synchronized.
-      return (sss[l_] - l) + m_fp_lce.lce_lr(l_, r_);
+      size_t final_lce = (sss[l_] - l) + m_fp_lce.lce_lr(l_, r_);
+      assert(final_lce == alx::lce::lce_naive_wordwise<t_char_type>::lce_lr(
+                              m_text, m_size, l, r));
+      return final_lce;
     }
   }
 
