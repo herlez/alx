@@ -46,19 +46,25 @@ std::vector<typename sss_type::index_type> reduce_fps_3tau_lexicographic(
 
   // sort sss-pos by 3tau-infix
   std::vector<index_type> sss_sorted = sss;
-  std::sort(sss_sorted.begin(), sss_sorted.end(),
-            [&text, &text_size, &sync_set](auto lhs, auto rhs) {
-              /*size_t lce = lce_naive_wordwise<uint8_t>::lce_up_to(
+  ips4o::sort(sss_sorted.begin(), sss_sorted.end(),
+            [&text, &text_size, &sync_set](index_type lhs, index_type rhs) {
+              if (lhs == rhs) {
+                return false;
+              }
+              assert(lhs != rhs);
+              size_t lce = lce_naive_wordwise<uint8_t>::lce_up_to(
                   text, text_size, lhs, rhs, 3 * tau);
+
               if (std::max(lhs, rhs) + lce == text_size) {
                 return lhs > rhs;
               }
-              if (text[lhs + lce] < text[rhs + lce]) {
-                return true;
+              if (text[lhs + lce] != text[rhs + lce]) {
+                return text[lhs + lce] < text[rhs + lce];
               }
-              return sync_set.get_run_info(lhs) < sync_set.get_run_info(rhs);*/
-              return lce_naive_wordwise<uint8_t>::is_leq_suffix(text, text_size,
-                                                                lhs, rhs);
+              if (sync_set.get_run_info(lhs) != sync_set.get_run_info(rhs)) {
+                return sync_set.get_run_info(lhs) < sync_set.get_run_info(rhs);
+              }
+              return false;
             });
 
   for (size_t idx = 1; idx < sss_sorted.size(); ++idx) {
@@ -67,21 +73,65 @@ std::vector<typename sss_type::index_type> reduce_fps_3tau_lexicographic(
     assert(leq_three_tau(text, text_size, i, j, sync_set));
   }
 
-  // build tuples
+  // Build tuples
   struct index_rank {
     index_type index;
     index_type rank;
   };
 
+  int nt = omp_get_max_threads();
   std::vector<index_rank> rank_tuples(sss_sorted.size());
-  index_type cur_rank{1};
-  rank_tuples[0] = {sss_sorted[0], cur_rank};
-  for (size_t i{1}; i < sss.size(); ++i) {
-    if (!eq_three_tau(text, text_size, sss_sorted[i - 1], sss_sorted[i],
-                      sync_set)) {
-      ++cur_rank;
+  // Max rank in block
+  std::vector<index_type> max_ranks(nt);
+  // The two vectors act as BV; vector<bool> fails in parallel.
+  std::vector<uint8_t> all_ranks_equal(nt);  // Are all ranks in block equal?
+  // Is first rank in block == last rank in prev block?
+  std::vector<uint8_t> rank_extends_prev_block(nt);
+
+#pragma omp parallel
+  {
+    const int t = omp_get_thread_num();
+    const int nt = omp_get_num_threads();
+    const size_t slice_size = rank_tuples.size() / nt;
+    const index_type begin = t * slice_size;
+    const index_type end =
+        (t < nt - 1) ? (t + 1) * slice_size : rank_tuples.size();
+
+    index_type cur_rank{1 + begin};
+    rank_tuples[begin] = {sss_sorted[begin], cur_rank};
+    for (size_t i{begin + 1}; i < end; ++i) {
+      if (!eq_three_tau(text, text_size, sss_sorted[i - 1], sss_sorted[i],
+                        sync_set)) {
+        ++cur_rank;
+      }
+      rank_tuples[i] = {sss_sorted[i], cur_rank};
     }
-    rank_tuples[i] = {sss_sorted[i], cur_rank};
+    max_ranks[t] = cur_rank;
+
+#pragma omp barrier
+    assert(rank_tuples[begin].rank == begin + 1);
+    all_ranks_equal[t] = (max_ranks[t] == begin + 1);
+    rank_extends_prev_block[t] =
+        (t == 0) ? false
+                 : eq_three_tau(text, text_size, sss_sorted[begin - 1],
+                                sss_sorted[begin], sync_set);
+#pragma omp barrier
+    // Now adjust ranks between blocks
+    if (t != 0) {
+      if (rank_extends_prev_block[t]) {
+        size_t target_t = t - 1;
+        while (all_ranks_equal[target_t] && rank_extends_prev_block[target_t]) {
+          --target_t;
+        }
+        index_type target_rank = max_ranks[target_t];
+
+        const uint32_t rank_to_decrease = rank_tuples[begin].rank;
+        for (size_t i = begin;
+             i < end && rank_tuples[i].rank == rank_to_decrease; ++i) {
+          rank_tuples[i].rank = target_rank;
+        }
+      }
+    }
   }
 
   // Check rank_tuples
@@ -98,16 +148,16 @@ std::vector<typename sss_type::index_type> reduce_fps_3tau_lexicographic(
     }
   }
 
-  // sort tuples by pos
-  //[0-3, 1-2, 2-2, 3-0, 4-1, 5-0]
-  std::sort(rank_tuples.begin(), rank_tuples.end(),
-            [](auto lhs, auto rhs) { return lhs.index < rhs.index; });
+  // Sort tuples by pos
+  ips4o::sort(rank_tuples.begin(), rank_tuples.end(),
+              [](auto lhs, auto rhs) { return lhs.index < rhs.index; });
 
-  // overwrite
+  // Overwrite
   std::vector<index_type> fps_reduced(sss.size());
   for (size_t i = 0; i < rank_tuples.size(); ++i) {
     fps_reduced[i] = rank_tuples[i].rank;
   }
+  // fps.push_back(0) // If using SAIS
   return fps_reduced;
 }
 
@@ -128,15 +178,20 @@ bool leq_three_tau(uint8_t const* text, size_t text_size, size_t text_pos_i,
 template <typename sss_type>
 bool eq_three_tau(uint8_t const* text, size_t text_size, size_t text_pos_i,
                   size_t text_pos_j, sss_type const& sync_set) {
-  constexpr size_t tau = sync_set.tau;
-  size_t const max_length =
-      std::min({text_size - text_pos_i, text_size - text_pos_j, 3 * tau});
-  size_t text_lce = lce_naive_wordwise<uint8_t>::lce_up_to(
-      text, text_size, text_pos_i, text_pos_j, 3 * tau);
+  assert(text_pos_i != text_pos_j);
+  size_t lce = lce_naive_wordwise<uint8_t>::lce_up_to(
+      text, text_size, text_pos_i, text_pos_j, 3 * sync_set.tau);
 
-  return ((text_lce == max_length) && sync_set.get_run_info(text_pos_i) ==
-                                          sync_set.get_run_info(text_pos_j));
+  if (std::max(text_pos_i, text_pos_j) + lce == text_size) {
+    return false;
+  }
+  if (text[text_pos_i + lce] != text[text_pos_j + lce]) {
+    return false;
+  }
+  if (sync_set.get_run_info(text_pos_i) != sync_set.get_run_info(text_pos_j)) {
+    return false;
+  }
+  return true;
 }
-
 }  // namespace alx::lce
 /******************************************************************************/

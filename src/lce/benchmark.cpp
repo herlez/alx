@@ -178,7 +178,7 @@ class benchmark {
       }
     }
     assert(queries.size() == 0 || queries.size() == num_queries * 2);
-    fmt::print(" q_path={}", cur_query_path.string());
+    //fmt::print(" q_path={}", cur_query_path.string());
     fmt::print(" q_size={}", queries.size() / 2);
     fmt::print(" q_load_time={}", t.get());
   }

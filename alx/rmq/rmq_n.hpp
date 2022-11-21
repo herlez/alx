@@ -1,5 +1,5 @@
 /*******************************************************************************
- * alx/rmq/rmq_nlgn.hpp
+ * alx/rmq/rmq_n.hpp
  *
  * Copyright (C) 2022 Alexander Herlez <alexander.herlez@tu-dortmund.de>
  *
