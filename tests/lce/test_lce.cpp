@@ -36,7 +36,7 @@ void test_simple() {
   std::iota(text.begin() + 1000, text.end(),
             std::numeric_limits<char_typee>::max() / 2);
   for (auto& c : text) {
-    if (c == numeric_limits<char_typee>::max()) {
+    if (c == std::numeric_limits<char_typee>::max()) {
       c = 0;
     }
   }
@@ -68,7 +68,7 @@ void test_simple_classic_for_sss() {
   std::iota(text.begin() + 1000, text.end(),
             std::numeric_limits<uint8_t>::max() / 2);
   for (auto& c : text) {
-    if (c == numeric_limits<uint8_t>::max()) {
+    if (c == std::numeric_limits<uint8_t>::max()) {
       c = 0;
     }
   }
@@ -109,7 +109,7 @@ void test_variants() {
   std::iota(text.begin() + 100, text.end(),
             std::numeric_limits<char_typee>::max() / 2);
   for (auto& c : text) {
-    if (c == numeric_limits<char_typee>::max()) {
+    if (c == std::numeric_limits<char_typee>::max()) {
       c = 0;
     }
   }
@@ -349,7 +349,7 @@ TEST(LceMemcmp, SS) {
 }
 
 TEST(LceFP, All) {
-  test_empty_constructor<alx::lce::lce_naive_std<unsigned char>>();
+  test_empty_constructor<alx::lce::lce_fp<unsigned char>>();
   test_retransform<alx::lce::lce_fp<unsigned char>>();
 
   test_simple<alx::lce::lce_fp<uint8_t>>();
