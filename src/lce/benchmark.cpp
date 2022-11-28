@@ -15,6 +15,7 @@
 #include <omp.h>
 #endif
 
+#include <algorithm>
 #include <filesystem>
 #include <iostream>
 #include <string>
@@ -36,17 +37,24 @@
 namespace fs = std::filesystem;
 
 std::vector<std::string> algorithms{
-    "main",           "all",           "naive",        "naive_std",
-    "naive_wordwise", "fp8",           "fp16",         "fp32",
-    "fp64",           "fp128",         "fp256",        "fp512",
-    "rk-prezza",      "sss_naive128",  "sss_naive256", "sss_naive512",
-    "sss_naive1024",  "sss_naive2048", "sss_noss128",  "sss_noss256",
-    "sss_noss512",    "sss_noss1024",  "sss_noss2048", "sss128",
-    "sss256",         "sss512",        "sss1024",      "sss2048",
+    "naive",        "naive_std",   "naive_wordwise", "rk-prezza",
+    "fp16",         "fp32",        "fp64",           "fp128",
+    "sss_naive256", "sss_noss512", "sss_naive1024",  "sss_naive2048",
+    "sss_noss256",  "sss_noss512", "sss_noss1024",   "sss_noss2048",
+    "sss256",       "sss512",      "sss1024",        "sss2048",
     "classic"};
+std::vector<std::string> algorithm_sets{"all", "seq", "par", "main"};
+
+std::vector<std::string> algorithms_seq{"naive", "naive_std", "naive_wordwise"};
+std::vector<std::string> algorithms_par{
+    "fp16",         "fp32",        "fp64",          "fp128",
+    "sss_naive256", "sss_noss512", "sss_naive1024", "sss_naive2048",
+    "sss_noss256",  "sss_noss512", "sss_noss1024",  "sss_noss2048",
+    "sss256",       "sss512",      "sss1024",       "sss2048",
+};
+
 std::vector<std::string> algorithms_main{
-    "main", "naive",        "naive_std",   "naive_wordwise",
-    "fp32", "sss_naive512", "sss_noss512", "sss512"};
+    "naive_wordwise", "fp32", "sss_naive512", "sss_noss512", "sss512"};
 
 class benchmark {
  public:
@@ -89,9 +97,11 @@ class benchmark {
 
     // Check algorithm
     if (std::find(algorithms.begin(), algorithms.end(), algorithm) ==
-        algorithms.end()) {
-      fmt::print("Algorithm {} is not specified.\n Use one of {}\n", algorithm,
-                 algorithms);
+            algorithms.end() &&
+        std::find(algorithm_sets.begin(), algorithm_sets.end(), algorithm) ==
+            algorithm_sets.end()) {
+      fmt::print("Algorithm {} is not specified.\n Use one of {} or {}\n",
+                 algorithm, algorithms, algorithm_sets);
       return false;
     }
     return true;
@@ -99,46 +109,12 @@ class benchmark {
 
   void load_text() {
     alx::util::timer t;
-    text = alx::util::load_vector<uint8_t>(text_path);
-    text.resize(text.size() +
-                ((text.size() % 8) == 0 ? 0 : 8 - (text.size() % 8)));
-    assert(text.size() != 0);
-    fmt::print(" text={}", text_path.filename().string());
-    fmt::print(" text_size={}", text.size());
-    fmt::print(" text_time={}", t.get());
-  }
-
-  void load_and_terminate_text() {
-    alx::util::timer t;
-    text = alx::util::load_vector<uint8_t>(
-        text_path, std::numeric_limits<size_t>::max(), 0);
-    // Calculate alphabet
-    std::vector<bool> alphabet(256);
-    for (size_t i{0}; i < text.size(); ++i) {
-      alphabet[text[i]] = true;
+    if (text.empty()) {
+      text = alx::util::load_vector<uint8_t>(text_path);
+      text.resize(text.size() +
+                  ((text.size() % 8) == 0 ? 0 : 8 - (text.size() % 8)));
+      assert(text.size() != 0);
     }
-    // Overwrite terminal symbols
-    uint8_t not_used = 1;
-    while (not_used < 256 && alphabet[not_used]) {
-      ++not_used;
-    }
-    for (size_t i{0}; i < text.size(); ++i) {
-      if (text[i] == 0) {
-        text[i] = not_used;
-      }
-    }
-    // Calculate alphabet size
-    size_t sigma = 0;
-    for (size_t i{0}; i < alphabet.size(); ++i) {
-      sigma += alphabet[i];
-    }
-    // Prepend and append terminal
-    text.front() = 0;
-    text.push_back(0);
-
-    assert(text.size() != 1);
-    fmt::print(" sigma={}", sigma);
-    fmt::print(" not_used={}", not_used);
     fmt::print(" text={}", text_path.filename().string());
     fmt::print(" text_size={}", text.size());
     fmt::print(" text_time={}", t.get());
@@ -178,7 +154,7 @@ class benchmark {
       }
     }
     assert(queries.size() == 0 || queries.size() == num_queries * 2);
-    //fmt::print(" q_path={}", cur_query_path.string());
+    // fmt::print(" q_path={}", cur_query_path.string());
     fmt::print(" q_size={}", queries.size() / 2);
     fmt::print(" q_load_time={}", t.get());
   }
@@ -200,23 +176,34 @@ class benchmark {
 
   template <typename lce_ds_type>
   void run(std::string const& algo_name) {
-    if (algo_name != algorithm && algorithm != "all" && algorithm != "main") {
-      return;
+    if (algorithm == "main") {
+      if (std::find(algorithms_main.begin(), algorithms_main.end(),
+                    algo_name) == algorithms_main.end()) {
+        return;
+      }
+    } else if (algorithm == "seq") {
+      if (std::find(algorithms_seq.begin(), algorithms_seq.end(), algo_name) ==
+          algorithms_seq.end()) {
+        return;
+      }
+    } else if (algorithm == "par") {
+      if (std::find(algorithms_par.begin(), algorithms_par.end(), algo_name) ==
+          algorithms_par.end()) {
+        return;
+      }
+    } else if (algorithm == "all") {
+      // OK
+    } else {
+      if (std::find(algorithms.begin(), algorithms.end(), algo_name) ==
+          algorithms.end()) {
+        return;
+      }
     }
-    if (algorithm == "main" &&
-        std::find(algorithms_main.begin(), algorithms_main.end(), algo_name) ==
-            algorithms_main.end()) {
-      return;
-    }
+
     // Benchmark construction
     fmt::print("RESULT algo={}", algo_name);
 
-    // if (std::is_same_v<alx::lce::lce_classic<uint8_t, uint64_t>,
-    // lce_ds_type>) {
-    //   load_and_terminate_text();
-    // } else {
     load_text();
-    //}
 
     lce_ds_type lce_ds = benchmark_construction<lce_ds_type>();
     fmt::print("\n");
@@ -281,33 +268,30 @@ int main(int argc, char** argv) {
     return -1;
   }
 
-  // b.run<alx::lce::lce_naive<>>("naive");
-  // b.run<alx::lce::lce_naive_std<>>("naive_std");
+  b.run<alx::lce::lce_naive<>>("naive");
+  b.run<alx::lce::lce_naive_std<>>("naive_std");
   b.run<alx::lce::lce_naive_wordwise<>>("naive_wordwise");
 
-  // b.run<alx::lce::lce_fp<uint8_t, 8>>("fp8");
-  // b.run<alx::lce::lce_fp<uint8_t, 16>>("fp16");
+  b.run<alx::lce::lce_fp<uint8_t, 16>>("fp16");
   b.run<alx::lce::lce_fp<uint8_t, 32>>("fp32");
-  // b.run<alx::lce::lce_fp<uint8_t, 64>>("fp64");
-  // b.run<alx::lce::lce_fp<uint8_t, 128>>("fp128");
-  // b.run<alx::lce::lce_fp<uint8_t, 256>>("fp256");
-  // b.run<alx::lce::lce_fp<uint8_t, 512>>("fp512");
-  // b.run<rklce::lce_rk_prezza>("rk-prezza");
+  b.run<alx::lce::lce_fp<uint8_t, 64>>("fp64");
+  b.run<alx::lce::lce_fp<uint8_t, 128>>("fp128");
+  b.run<rklce::lce_rk_prezza>("rk-prezza");
 
-  // b.run<alx::lce::lce_sss_naive<uint8_t, 256, uint64_t>>("sss_naive256");
+  b.run<alx::lce::lce_sss_naive<uint8_t, 256, uint64_t>>("sss_naive256");
   b.run<alx::lce::lce_sss_naive<uint8_t, 512, uint64_t>>("sss_naive512");
-  // b.run<alx::lce::lce_sss_naive<uint8_t, 1024, uint64_t>>("sss_naive1024");
-  // b.run<alx::lce::lce_sss_naive<uint8_t, 2048, uint64_t>>("sss_naive2048");
+  b.run<alx::lce::lce_sss_naive<uint8_t, 1024, uint64_t>>("sss_naive1024");
+  b.run<alx::lce::lce_sss_naive<uint8_t, 2048, uint64_t>>("sss_naive2048");
 
-  // b.run<alx::lce::lce_sss_noss<uint8_t, 256, uint64_t>>("sss_noss256");
+  b.run<alx::lce::lce_sss_noss<uint8_t, 256, uint64_t>>("sss_noss256");
   b.run<alx::lce::lce_sss_noss<uint8_t, 512, uint64_t>>("sss_noss512");
-  // b.run<alx::lce::lce_sss_noss<uint8_t, 1024, uint64_t>>("sss_noss1024");
-  // b.run<alx::lce::lce_sss_noss<uint8_t, 2048, uint64_t>>("sss_noss2048");
+  b.run<alx::lce::lce_sss_noss<uint8_t, 1024, uint64_t>>("sss_noss1024");
+  b.run<alx::lce::lce_sss_noss<uint8_t, 2048, uint64_t>>("sss_noss2048");
 
-  // b.run<alx::lce::lce_sss<uint8_t, 256, uint64_t>>("sss256");
+  b.run<alx::lce::lce_sss<uint8_t, 256, uint64_t>>("sss256");
   b.run<alx::lce::lce_sss<uint8_t, 512, uint64_t>>("sss512");
-  // b.run<alx::lce::lce_sss<uint8_t, 1024, uint64_t>>("sss1024");
-  // b.run<alx::lce::lce_sss<uint8_t, 2048, uint64_t>>("sss2048");
+  b.run<alx::lce::lce_sss<uint8_t, 1024, uint64_t>>("sss1024");
+  b.run<alx::lce::lce_sss<uint8_t, 2048, uint64_t>>("sss2048");
 
-  b.run<alx::lce::lce_classic<uint8_t, uint64_t>>("classic");
+  // b.run<alx::lce::lce_classic<uint8_t, uint64_t>>("classic");
 }

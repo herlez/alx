@@ -7,10 +7,10 @@
  ******************************************************************************/
 
 #pragma once
-#include <array>
 #include <assert.h>
 #include <omp.h>
 
+#include <array>
 #include <bit>
 #include <cstdint>
 
@@ -24,24 +24,23 @@ class lce_fp {
   typedef t_char_type char_type;
   __extension__ typedef unsigned __int128 uint128_t;
 
-  lce_fp() : m_block_fps(nullptr), m_size(0), m_size_in_blocks(0) {
+  lce_fp() : m_block_fps(nullptr), m_size(0) {
   }
 
   lce_fp(char_type* text, size_t size)
-      : m_block_fps(reinterpret_cast<uint64_t*>(text)),
-        m_size(size),
-        m_size_in_blocks(1 + (size - 1) / 8) {
+      : m_block_fps(reinterpret_cast<uint64_t*>(text)), m_size(size) {
     assert(size % 8 == 0);
     assert(sizeof(t_char_type) == 1);
     std::vector<uint64_t> superblock_fps;
 // Partition text for threads in superblocks.
 #pragma omp parallel
     {
+      size_t size_in_blocks{1 + (size - 1) / 8};
       int t = omp_get_thread_num();
       int nt = omp_get_num_threads();
-      uint64_t slice_size = m_size_in_blocks / nt;
+      uint64_t slice_size = size_in_blocks / nt;
       size_t begin = t * slice_size;
-      size_t end = (t < nt - 1) ? (t + 1) * slice_size : m_size_in_blocks;
+      size_t end = (t < nt - 1) ? (t + 1) * slice_size : size_in_blocks;
 
       // For small endian systems we need to swap the order of bytes in order to
       // calculate fingerprints. Luckily this step is fast.
@@ -94,7 +93,7 @@ class lce_fp {
         m_block_fps[i] = static_cast<uint64_t>(fingerprint) +
                          (current_block >= m_prime) * 0x8000000000000000ULL;
       }
-      //std::cout << "Hello World";
+      // std::cout << "Hello World";
     }
   }
 
@@ -102,13 +101,38 @@ class lce_fp {
   lce_fp(C& container) : lce_fp(container.data(), container.size()) {
   }
 
+  // destructor
+  ~lce_fp() {
+    retransform_text();
+  }
+
+  // copy constructor
+  lce_fp(const lce_fp& other) = delete;
+
+  // move constructor
+  lce_fp(lce_fp&& other)
+      : m_block_fps(other.m_block_fps), m_size(other.m_size) {
+  }
+
+  // copy assignment
+  lce_fp& operator=(const lce_fp& other) = delete;
+
+  // move assignment
+  lce_fp& operator=(lce_fp&& other) noexcept {
+    m_block_fps = other.m_block_fps;
+    m_size = other.m_size;
+    return *this;
+  }
+
   void retransform_text() {
-    for (size_t i{(m_size / 8) - 1}; i > 0; --i) {
-      m_block_fps[i] = get_block_not_first(i);
-      m_block_fps[i] = __builtin_bswap64(m_block_fps[i]);
+    if (m_block_fps != nullptr) {
+      for (size_t i{(m_size / 8) - 1}; i > 0; --i) {
+        m_block_fps[i] = get_block_not_first(i);
+        m_block_fps[i] = __builtin_bswap64(m_block_fps[i]);
+      }
+      m_block_fps[0] &= 0x7FFFFFFFFFFFFFFFULL;
+      m_block_fps[0] = __builtin_bswap64(m_block_fps[0]);
     }
-    m_block_fps[0] &= 0x7FFFFFFFFFFFFFFFULL;
-    m_block_fps[0] = __builtin_bswap64(m_block_fps[0]);
   }
 
   char_type operator[](size_t pos) const {
@@ -331,9 +355,8 @@ class lce_fp {
   }
 
  private:
-  uint64_t* m_block_fps;
-  size_t m_size;
-  size_t m_size_in_blocks;
+  uint64_t* m_block_fps = nullptr;
+  size_t m_size = 0;
   static constexpr uint128_t m_prime{0x800000000000001d};
 
   // Calculates the powers of 2. This supports LCE queries and reduces the time
