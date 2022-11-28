@@ -46,7 +46,7 @@ std::vector<std::string> algorithms{
     "classic"};
 std::vector<std::string> algorithms_main{
     "main", "naive",        "naive_std",   "naive_wordwise",
-    "fp32", "sss_naive512", "sss_noss512", "sss_512", "classic"};
+    "fp32", "sss_naive512", "sss_noss512", "sss512", "classic"};
 
 class benchmark {
  public:
