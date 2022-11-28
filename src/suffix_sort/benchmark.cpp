@@ -67,7 +67,8 @@ class benchmark {
   void load_text() {
     alx::util::timer t;
     text = alx::util::load_vector<uint8_t>(text_path);
-    text.resize(text.size() + ((text.size() % 8) ? 0 : 8 - (text.size() % 8)));
+    text.resize(text.size() +
+                ((text.size() % 8) == 0 ? 0 : 8 - (text.size() % 8)));
     assert(text.size() != 0);
     fmt::print(" text={}", text_path.filename().string());
     fmt::print(" text_size={}", text.size());
@@ -144,9 +145,9 @@ int main(int argc, char** argv) {
 #ifndef ALX_BENCHMARK_PARALLEL
   if (omp_get_max_threads() != 1) {
     fmt::print(stderr,
-               "Set option ALX_BENCHMARK_PARALLEL to true or export "
+               "Because option ALX_BENCHMARK_PARALLEL is set to true, we set "
                "OMP_NUM_THREADS=1\n");
-    return -1;
+    omp_set_num_threads(1);
   };
 #endif
 
