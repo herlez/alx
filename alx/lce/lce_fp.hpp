@@ -7,6 +7,7 @@
  ******************************************************************************/
 
 #pragma once
+#include <array>
 #include <assert.h>
 #include <omp.h>
 
@@ -93,6 +94,7 @@ class lce_fp {
         m_block_fps[i] = static_cast<uint64_t>(fingerprint) +
                          (current_block >= m_prime) * 0x8000000000000000ULL;
       }
+      //std::cout << "Hello World";
     }
   }
 
