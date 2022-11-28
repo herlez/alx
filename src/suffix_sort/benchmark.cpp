@@ -6,14 +6,13 @@
  * All rights reserved. Published under the BSD-2 license in the LICENSE file.
  ******************************************************************************/
 
-#ifndef ALX_BENCHMARK_PARALLEL
-#define ALX_MEASURE_SPACE
-#endif
-
 #include <fmt/core.h>
 #include <fmt/ranges.h>
 #ifdef ALX_MEASURE_SPACE
 #include <malloc_count/malloc_count.h>
+#endif
+#ifdef ALX_BENCHMARK_PARALLEL
+#include <omp.h>
 #endif
 
 #include <filesystem>
