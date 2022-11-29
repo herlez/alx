@@ -15,7 +15,7 @@
 #include <gsaca-double-sort-par.hpp>
 
 #include "lce/lce_naive_wordwise.hpp"
-#include "rmq/rmq_nlgn.hpp"
+#include "rmq/rmq_n.hpp"
 
 #ifdef ALX_BENCHMARK_INTERNAL
 #include <fmt/core.h>
@@ -105,7 +105,7 @@ class lce_classic_for_sss {
       }
     }
     // built rmq
-    m_rmq = alx::rmq::rmq_nlgn<t_index_type>(m_lcp);
+    m_rmq = alx::rmq::rmq_n<t_index_type>(m_lcp);
   }
 
   // Return the number of common letters in text[i..] and text[j..]. Here i and
@@ -125,7 +125,7 @@ class lce_classic_for_sss {
   size_t m_size;
   std::vector<t_index_type> m_isa;
   std::vector<t_index_type> m_lcp;
-  alx::rmq::rmq_nlgn<t_index_type> m_rmq;
+  alx::rmq::rmq_n<t_index_type> m_rmq;
 };
 
 }  // namespace alx::lce
