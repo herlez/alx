@@ -110,10 +110,10 @@ class benchmark {
   void load_text() {
     alx::util::timer t;
     if (text.empty()) {
-      text = alx::util::load_vector<uint8_t>(text_path);
-      text.resize(text.size() +
-                  ((text.size() % 8) == 0 ? 0 : 8 - (text.size() % 8)));
+      text = alx::util::load_vector<uint8_t>(
+          text_path, std::numeric_limits<size_t>::max(), 8);
       assert(text.size() != 0);
+      assert(text.size() % 8 == 0);
     }
     fmt::print(" text={}", text_path.filename().string());
     fmt::print(" text_size={}", text.size());
