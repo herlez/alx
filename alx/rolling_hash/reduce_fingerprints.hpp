@@ -46,7 +46,7 @@ std::vector<typename sss_type::index_type> reduce_fps_3tau_lexicographic(
 
   // sort sss-pos by 3tau-infix
   std::vector<index_type> sss_sorted = sss;
-  ips4o::sort(sss_sorted.begin(), sss_sorted.end(),
+  ips4o::parallel::sort(sss_sorted.begin(), sss_sorted.end(),
             [&text, &text_size, &sync_set](index_type lhs, index_type rhs) {
               if (lhs == rhs) {
                 return false;
@@ -149,7 +149,7 @@ std::vector<typename sss_type::index_type> reduce_fps_3tau_lexicographic(
   }
 
   // Sort tuples by pos
-  ips4o::sort(rank_tuples.begin(), rank_tuples.end(),
+  ips4o::parallel::sort(rank_tuples.begin(), rank_tuples.end(),
               [](auto lhs, auto rhs) { return lhs.index < rhs.index; });
 
   // Overwrite
