@@ -29,16 +29,10 @@ add_library(pgm INTERFACE)
 target_link_libraries(pgm INTERFACE  OpenMP::OpenMP_CXX)
 target_include_directories(pgm INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/PGM-index/include/pgm)
 
-add_library(ips4o INTERFACE)
-target_include_directories(ips4o INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/ips4o)
-target_link_libraries(ips4o INTERFACE)
-#find_package(TBB REQUIRED)
-#add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ips4o)
+file(REMOVE ${CMAKE_CURRENT_SOURCE_DIR}/extlib/ips4o/extern/cmake-modules/FindTBB.cmake)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ips4o)
 
 add_library(gsaca_ds INTERFACE)
 target_link_libraries(gsaca_ds INTERFACE OpenMP::OpenMP_CXX ips4o -latomic)
 target_include_directories(gsaca_ds INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/gsaca-double-sort)
-
-#set(DISABLE_IPS4O_PARALLEL TRUE)
-#add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ips4o)
 
