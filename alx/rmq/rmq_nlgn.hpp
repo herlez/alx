@@ -28,7 +28,9 @@ class rmq_nlgn {
     m_power_rmq.resize(m_num_levels);
 
     // Build first level
-    m_power_rmq[0].resize(size - 1);
+    if (!m_power_rmq.empty()) {
+      m_power_rmq[0].resize(size - 1);
+    }
 
 #pragma omp parallel for
     for (size_t i = 0; i < size - 1; ++i) {
