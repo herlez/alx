@@ -194,10 +194,9 @@ class benchmark {
     } else if (algorithm == "all") {
       // OK
     } else {
-      if (std::find(algorithms.begin(), algorithms.end(), algo_name) ==
-          algorithms.end()) {
-        return;
-      }
+      if (algo_name != algorithm) {
+          return;
+        }
     }
 
     // Benchmark construction
