@@ -25,6 +25,7 @@
 [submodule "extlib/gsaca-double-sort"]
 	path = extlib/gsaca-double-sort
 	url = https://github.com/jonas-ellert/gsaca-double-sort
+	branch = gsaca-for-lce
 [submodule "extlib/ips4o"]
 	path = extlib/ips4o
 	url = https://github.com/ips4o/ips4o
