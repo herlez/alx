@@ -29,7 +29,9 @@ add_library(pgm INTERFACE)
 target_link_libraries(pgm INTERFACE  OpenMP::OpenMP_CXX)
 target_include_directories(pgm INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/PGM-index/include/pgm)
 
-file(REMOVE ${CMAKE_CURRENT_SOURCE_DIR}/extlib/ips4o/extern/cmake-modules/FindTBB.cmake)
+# ips4o/extern/cmake-modules messes up loading TBB
+file(REMOVE_RECURSE ${CMAKE_CURRENT_SOURCE_DIR}/ips4o/extern/cmake-modules)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/ips4o/extern/cmake-modules/cmake-modules)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ips4o)
 
 add_library(gsaca_ds INTERFACE)
