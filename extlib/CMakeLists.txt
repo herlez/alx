@@ -33,7 +33,7 @@ target_include_directories(pgm INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/PGM-index/i
 option(KEEP_IPS4O_EXTERN_FOLDER OFF)
 if(NOT ${KEEP_IPS4O_EXTERN_FOLDER})
 file(REMOVE_RECURSE ${CMAKE_CURRENT_SOURCE_DIR}/ips4o/extern/cmake-modules)
-file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/ips4o/extern/cmake-modules/cmake-modules)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/ips4o/extern/cmake-modules)
 endif()
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ips4o)
 
