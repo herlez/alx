@@ -39,7 +39,7 @@ namespace fs = std::filesystem;
 std::vector<std::string> algorithms{
     "naive",        "naive_std",   "naive_wordwise", "rk-prezza",
     "fp16",         "fp32",        "fp64",           "fp128",
-    "sss_naive256", "sss_noss512", "sss_naive1024",  "sss_naive2048",
+    "sss_naive256", "sss_naive512", "sss_naive1024",  "sss_naive2048",
     "sss_noss256",  "sss_noss512", "sss_noss1024",   "sss_noss2048",
     "sss256",       "sss512",      "sss1024",        "sss2048",
     "classic"};
@@ -48,7 +48,7 @@ std::vector<std::string> algorithm_sets{"all", "seq", "par", "main"};
 std::vector<std::string> algorithms_seq{"naive", "naive_std", "naive_wordwise"};
 std::vector<std::string> algorithms_par{
     "fp16",         "fp32",        "fp64",          "fp128",
-    "sss_naive256", "sss_noss512", "sss_naive1024", "sss_naive2048",
+    "sss_naive256", "sss_naive512", "sss_naive1024", "sss_naive2048",
     "sss_noss256",  "sss_noss512", "sss_noss1024",  "sss_noss2048",
     "sss256",       "sss512",      "sss1024",       "sss2048",
 };
