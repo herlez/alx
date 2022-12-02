@@ -8,11 +8,8 @@
 
 #include <fmt/core.h>
 #include <fmt/ranges.h>
-#ifdef ALX_MEASURE_SPACE
+#ifdef ALX_BENCHMARK_SPACE
 #include <malloc_count/malloc_count.h>
-#endif
-#ifdef ALX_BENCHMARK_PARALLEL
-#include <omp.h>
 #endif
 
 #include <assert.h>
@@ -94,7 +91,7 @@ class benchmark {
 
   template <typename pred_ds_type>
   pred_ds_type benchmark_construction() {
-#ifdef ALX_MEASURE_SPACE
+#ifdef ALX_BENCHMARK_SPACE
     malloc_count_reset_peak();
     size_t mem_before = malloc_count_current();
 #endif
@@ -102,7 +99,7 @@ class benchmark {
     pred_ds_type pred_ds(data);
     fmt::print(" threads={}", omp_get_max_threads());
     fmt::print(" c_time={}", t.get());
-#ifdef ALX_MEASURE_SPACE
+#ifdef ALX_BENCHMARK_SPACE
     fmt::print(" c_mem={}", malloc_count_current() - mem_before);
     fmt::print(" c_mempeak={}", malloc_count_peak() - mem_before);
 #endif
@@ -152,15 +149,6 @@ class benchmark {
 };
 
 int main(int argc, char** argv) {
-#ifndef ALX_BENCHMARK_PARALLEL
-  if (omp_get_max_threads() != 1) {
-    fmt::print(stderr,
-               "Set option ALX_BENCHMARK_PARALLEL to true or export "
-               "OMP_NUM_THREADS=1\n");
-    return -1;
-  };
-#endif
-
   benchmark b;
   tlx::CmdlineParser cp;
   cp.set_description(

@@ -22,7 +22,7 @@
 #include <fmt/ranges.h>
 
 #include "util/timer.hpp"
-#ifdef ALX_MEASURE_SPACE
+#ifdef ALX_BENCHMARK_SPACE
 #include <malloc_count/malloc_count.h>
 #endif
 #endif
@@ -45,7 +45,7 @@ class lce_sss_noss {
 
 #ifdef ALX_BENCHMARK_INTERNAL
     alx::util::timer t;
-#ifdef ALX_MEASURE_SPACE
+#ifdef ALX_BENCHMARK_SPACE
     size_t mem_before = malloc_count_current();
     malloc_count_reset_peak();
 #endif
@@ -59,14 +59,14 @@ class lce_sss_noss {
     fmt::print(" sss_size={}", m_sync_set.size());
     fmt::print(" sss_runs={}", m_sync_set.num_runs());
 
-#ifdef ALX_MEASURE_SPACE
+#ifdef ALX_BENCHMARK_SPACE
     fmt::print(" sss_construct_mem={}", malloc_count_current() - mem_before);
     fmt::print(" sss_construct_mem_peak={}", malloc_count_peak() - mem_before);
 #endif
 #endif
 
 #ifdef ALX_BENCHMARK_INTERNAL
-#ifdef ALX_MEASURE_SPACE
+#ifdef ALX_BENCHMARK_SPACE
     mem_before = malloc_count_current();
     malloc_count_reset_peak();
 #endif
@@ -77,7 +77,7 @@ class lce_sss_noss {
 
 #ifdef ALX_BENCHMARK_INTERNAL
     fmt::print(" pred_construct_time={}", t.get_and_reset());
-#ifdef ALX_MEASURE_SPACE
+#ifdef ALX_BENCHMARK_SPACE
     fmt::print(" pred_construct_mem={}", malloc_count_current() - mem_before);
     fmt::print(" pred_construct_mem_peak={}", malloc_count_peak() - mem_before);
 #endif
@@ -89,7 +89,7 @@ class lce_sss_noss {
 
 #ifdef ALX_BENCHMARK_INTERNAL
     fmt::print(" fp_lce_construct_time={}", t.get_and_reset());
-#ifdef ALX_MEASURE_SPACE
+#ifdef ALX_BENCHMARK_SPACE
     fmt::print(" fp_lce_construct_mem={}", malloc_count_current() - mem_before);
     fmt::print(" fp_lce_construct_mem_peak={}",
                malloc_count_peak() - mem_before);

@@ -21,7 +21,7 @@
 #include <fmt/ranges.h>
 
 #include "util/timer.hpp"
-#ifdef ALX_MEASURE_SPACE
+#ifdef ALX_BENCHMARK_SPACE
 #include <malloc_count/malloc_count.h>
 #endif
 #endif

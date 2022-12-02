@@ -22,7 +22,7 @@
 #include <fmt/ranges.h>
 
 #include "util/timer.hpp"
-#ifdef ALX_MEASURE_SPACE
+#ifdef ALX_BENCHMARK_SPACE
 #include <malloc_count/malloc_count.h>
 #endif
 #endif
@@ -42,7 +42,7 @@ class lce_classic {
     // sort sa
 #ifdef ALX_BENCHMARK_INTERNAL
     alx::util::timer t;
-#ifdef ALX_MEASURE_SPACE
+#ifdef ALX_BENCHMARK_SPACE
     size_t mem_before = malloc_count_current();
     malloc_count_reset_peak();
 #endif
@@ -50,7 +50,7 @@ class lce_classic {
     gsaca_for_lce(text, sa.data(), size);
 #ifdef ALX_BENCHMARK_INTERNAL
     fmt::print(" gsaca_time={}", t.get_and_reset());
-#ifdef ALX_MEASURE_SPACE
+#ifdef ALX_BENCHMARK_SPACE
     fmt::print(" gsaca_mem={}", malloc_count_current() - mem_before);
     fmt::print(" gsaca_mem_peak={}", malloc_count_peak() - mem_before);
 #endif
