@@ -30,32 +30,30 @@ class lce_fp {
   lce_fp(char_type* text, size_t size)
       : m_block_fps(reinterpret_cast<uint64_t*>(text)), m_size(size) {
     assert(size % 8 == 0);
+    size_t size_in_blocks{size / 8};
     assert(sizeof(t_char_type) == 1);
-    std::vector<uint64_t> superblock_fps;
-// Partition text for threads in superblocks.
+    std::vector<uint64_t> superblock_fps(omp_get_max_threads());
+    // Partition text for threads in superblocks.
+
+    // For small endian systems we need to swap the order of bytes in order to
+    // calculate fingerprints. Luckily this step is fast.
+    if constexpr (std::endian::native == std::endian::little) {
+#pragma omp parallel for
+      for (size_t i = 0; i < size_in_blocks; ++i) {
+        m_block_fps[i] =
+            __builtin_bswap64(m_block_fps[i]);  // C++23 std::byteswap!
+      }
+    }
+
 #pragma omp parallel
     {
-      size_t size_in_blocks{1 + (size - 1) / 8};
       int t = omp_get_thread_num();
       int nt = omp_get_num_threads();
       uint64_t slice_size = size_in_blocks / nt;
       size_t begin = t * slice_size;
       size_t end = (t < nt - 1) ? (t + 1) * slice_size : size_in_blocks;
 
-      // For small endian systems we need to swap the order of bytes in order to
-      // calculate fingerprints. Luckily this step is fast.
-      if constexpr (std::endian::native == std::endian::little) {
-        for (size_t i = begin; i < end; ++i) {
-          m_block_fps[i] =
-              __builtin_bswap64(m_block_fps[i]);  // C++23 std::byteswap!
-        }
-      }
-
-// First calculate FP of superblock.
-#pragma omp single
-      { superblock_fps.resize(nt); }
-#pragma omp barrier
-
+      // First calculate FP of superblock.
       if (t != nt - 1) {
         uint128_t fingerprint = 0;
         for (size_t i = begin; i < end; ++i) {
@@ -66,21 +64,26 @@ class lce_fp {
         }
         superblock_fps[t + 1] = fingerprint;
       }
-#pragma omp barrier
-// Prefix sum over fingerprints of superblocks.
-#pragma omp single
-      {
-        uint128_t shift_influence = modular::pow_mod(
-            uint128_t{1} << 64, uint128_t{slice_size}, m_prime);
-        for (size_t i = 1; i < superblock_fps.size(); ++i) {
-          uint128_t last_block_influence =
-              shift_influence * superblock_fps[i - 1];
-          uint128_t cur_block_influence = superblock_fps[i];
-          superblock_fps[i] =
-              (last_block_influence + cur_block_influence) % m_prime;
-        }
-      }
-#pragma omp barrier
+    }
+
+    // Prefix sum over fingerprints of superblocks.
+    uint64_t slice_size = size_in_blocks / omp_get_max_threads();
+    uint128_t shift_influence =
+        modular::pow_mod(uint128_t{1} << 64, uint128_t{slice_size}, m_prime);
+    for (size_t i = 1; i < superblock_fps.size(); ++i) {
+      uint128_t last_block_influence = shift_influence * superblock_fps[i - 1];
+      uint128_t cur_block_influence = superblock_fps[i];
+      superblock_fps[i] =
+          (last_block_influence + cur_block_influence) % m_prime;
+    }
+
+#pragma omp parallel
+    {
+      int t = omp_get_thread_num();
+      int nt = omp_get_num_threads();
+      uint64_t slice_size = size_in_blocks / nt;
+      size_t begin = t * slice_size;
+      size_t end = (t < nt - 1) ? (t + 1) * slice_size : size_in_blocks;
 
       // Overwrite text with fingerprints.
       uint128_t fingerprint = superblock_fps[t];
@@ -394,6 +397,9 @@ class lce_fp {
   // Return the i'th block for i > 0.
   uint64_t get_block_not_first(const uint64_t i) const {
     assert(i >= 1);
+    if (i >= m_size / 8) {
+      return 0;
+    }
     uint128_t x = m_block_fps[i - 1] & 0x7FFFFFFFFFFFFFFFULL;
     x <<= 64;
     x %= m_prime;
