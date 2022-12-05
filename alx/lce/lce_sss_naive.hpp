@@ -30,7 +30,7 @@
 namespace alx::lce {
 
 template <typename t_char_type = uint8_t, uint64_t t_tau = 1024,
-          typename t_index_type = uint32_t>
+          typename t_index_type = uint32_t, bool t_prefer_long = false>
 class lce_sss_naive {
  public:
   typedef t_char_type char_type;
@@ -112,8 +112,31 @@ class lce_sss_naive {
   // Return the number of common letters in text[i..] and text[j..].
   // Here l must be smaller than r.
   inline uint64_t lce_lr(size_t l, size_t r) const {
-    // Naive part until synchronizing position
-    {
+    std::vector<t_index_type> const& sss = m_sync_set.get_sss();
+    std::vector<uint128_t> const& fps = m_sync_set.get_fps();
+    size_t l_, r_;
+    if constexpr (t_prefer_long) {
+      // Only scan until synchronizing position
+      size_t lce_max{m_size - r};
+      size_t lce_local_max{std::min(3 * t_tau, lce_max)};
+
+      pred::result l_res = m_pred.successor(l);
+      pred::result r_res = m_pred.successor(r);
+      l_ = l_res.pos;
+      r_ = r_res.pos;
+      if (l_res.exists && r_res.exists && (sss[l_] - l == sss[r_] - r)) {
+        lce_local_max = std::min(lce_local_max, sss[l_] - l);
+      }
+
+      size_t lce_local = alx::lce::lce_naive_wordwise<t_char_type>::lce_lr(
+          m_text, r + lce_local_max, l, r);
+
+      // Case 0: Mismatch at first 3*tau symbols
+      if (lce_local < lce_local_max || lce_local == lce_max) {
+        return lce_local;
+      }
+    } else {
+      // Naive part until synchronizing position
       size_t lce_max{m_size - r};
       size_t lce_local_max{std::min(3 * t_tau, lce_max)};
       size_t lce_local = alx::lce::lce_naive_wordwise<t_char_type>::lce_lr(
@@ -123,14 +146,9 @@ class lce_sss_naive {
       if (lce_local < lce_local_max || lce_local == lce_max) {
         return lce_local;
       }
+      l_ = m_pred.successor(l).pos;
+      r_ = m_pred.successor(r).pos;
     }
-
-    // From synchronizing position
-    std::vector<t_index_type> const& sss = m_sync_set.get_sss();
-    std::vector<uint128_t> const& fps = m_sync_set.get_fps();
-
-    size_t l_ = m_pred.successor(l).pos;
-    size_t r_ = m_pred.successor(r).pos;
 
     // Case 1: Positions l' and r' don't sync, (because they are at the end of
     // runs).
@@ -152,13 +170,14 @@ class lce_sss_naive {
       size_t lce_local = alx::lce::lce_naive_wordwise<t_char_type>::lce_lr(
           m_text, sss[r__] + lce_local_max, sss[l__], sss[r__]);
       if (lce_local < lce_local_max || lce_local == lce_max) {
-        return  (sss[l__] - l) + lce_local;
+        return (sss[l__] - l) + lce_local;
       }
     }
 
     // Case 3: Mismatch at run end.
     assert(r__ + 1 < sss.size() - 1);
-    size_t final_lce = std::min(sss[l__ + 1] - l, sss[r__ + 1] - r) + 2 * t_tau - 1;
+    size_t final_lce =
+        std::min(sss[l__ + 1] - l, sss[r__ + 1] - r) + 2 * t_tau - 1;
     assert(final_lce == alx::lce::lce_naive_wordwise<t_char_type>::lce_lr(
                             m_text, m_size, l, r));
     return final_lce;
