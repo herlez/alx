@@ -319,8 +319,8 @@ TEST(LceSssNaivePL, All) {
 TEST(LceSssNoSs, All) {
   test_empty_constructor<alx::lce::lce_sss_noss<uint8_t, 16>>();
 
-  test_simple<alx::lce::lce_sss_noss<uint8_t, 16>>();
-  test_simple<alx::lce::lce_sss_noss<int8_t, 16>>();
+  test_simple<alx::lce::lce_sss_noss<uint8_t, 16, uint32_t, false>>();
+  test_simple<alx::lce::lce_sss_noss<int8_t, 16, uint32_t, false>>();
   // test_simple<alx::lce::lce_sss_noss<uint16_t, 16>>();
   // test_simple<alx::lce::lce_sss_noss<int16_t, 16>>();
   // test_simple<alx::lce::lce_sss_noss<uint32_t, 16>>();
@@ -330,8 +330,33 @@ TEST(LceSssNoSs, All) {
   // test_simple<alx::lce::lce_sss_noss<__uint128_t, 16>>();
   // test_simple<alx::lce::lce_sss_noss<__int128_t, 16>>();
 
-  test_variants<alx::lce::lce_sss_noss<uint8_t, 16>, true, true, true, false>();
-  test_variants<alx::lce::lce_sss_noss<int8_t, 16>, true, true, true, false>();
+  test_variants<alx::lce::lce_sss_noss<uint8_t, 16, uint32_t, false>, true, true, true, false>();
+  test_variants<alx::lce::lce_sss_noss<int8_t, 16, uint32_t, false>, true, true, true, false>();
+  // test_variants<alx::lce::lce_sss_noss<uint16_t, 16>>();
+  // test_variants<alx::lce::lce_sss_noss<int16_t, 16>>();
+  // test_variants<alx::lce::lce_sss_noss<uint32_t, 16>>();
+  // test_variants<alx::lce::lce_sss_noss<int32_t, 16>>();
+  // test_variants<alx::lce::lce_sss_noss<uint64_t, 16>>();
+  // test_variants<alx::lce::lce_sss_noss<int64_t, 16>>();
+  // test_variants<alx::lce::lce_sss_noss<__uint128_t, 16>>();
+  // test_variants<alx::lce::lce_sss_noss<__int128_t, 16>>();
+}
+TEST(LceSssNoSsPL, All) {
+  test_empty_constructor<alx::lce::lce_sss_noss<uint8_t, 16>>();
+
+  test_simple<alx::lce::lce_sss_noss<uint8_t, 16, uint32_t, true>>();
+  test_simple<alx::lce::lce_sss_noss<int8_t, 16, uint32_t, true>>();
+  // test_simple<alx::lce::lce_sss_noss<uint16_t, 16>>();
+  // test_simple<alx::lce::lce_sss_noss<int16_t, 16>>();
+  // test_simple<alx::lce::lce_sss_noss<uint32_t, 16>>();
+  // test_simple<alx::lce::lce_sss_noss<int32_t, 16>>();
+  // test_simple<alx::lce::lce_sss_noss<uint64_t, 16>>();
+  // test_simple<alx::lce::lce_sss_noss<int64_t, 16>>();
+  // test_simple<alx::lce::lce_sss_noss<__uint128_t, 16>>();
+  // test_simple<alx::lce::lce_sss_noss<__int128_t, 16>>();
+
+  test_variants<alx::lce::lce_sss_noss<uint8_t, 16, uint32_t, true>, true, true, true, false>();
+  test_variants<alx::lce::lce_sss_noss<int8_t, 16, uint32_t, true>, true, true, true, false>();
   // test_variants<alx::lce::lce_sss_noss<uint16_t, 16>>();
   // test_variants<alx::lce::lce_sss_noss<int16_t, 16>>();
   // test_variants<alx::lce::lce_sss_noss<uint32_t, 16>>();

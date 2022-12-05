@@ -55,6 +55,10 @@ std::vector<std::string> algorithms{"naive",
                                     "sss_noss512",
                                     "sss_noss1024",
                                     "sss_noss2048",
+                                    "sss_noss256pl",
+                                    "sss_noss512pl",
+                                    "sss_noss1024pl",
+                                    "sss_noss2048pl",
                                     "sss256",
                                     "sss512",
                                     "sss1024",
@@ -68,17 +72,39 @@ std::vector<std::string> algorithm_sets{"all", "seq", "par", "main"};
 
 std::vector<std::string> algorithms_seq{"naive", "naive_std", "naive_wordwise"};
 std::vector<std::string> algorithms_par{
-    "fp16",         "fp32",         "fp64",          "fp128",
-    "sss_naive256", "sss_naive512", "sss_naive1024", "sss_naive2048",
-    "sss_naive256pl", "sss_naive512pl", "sss_naive1024pl",  "sss_naive2048pl",
-    "sss_noss256",  "sss_noss512",  "sss_noss1024",  "sss_noss2048",
-    "sss256",       "sss512",       "sss1024",       "sss2048",
-    "sss256pl",     "sss512pl",     "sss1024pl",     "sss2048pl",
+    "fp16",
+    "fp32",
+    "fp64",
+    "fp128",
+    "sss_naive256",
+    "sss_naive512",
+    "sss_naive1024",
+    "sss_naive2048",
+    "sss_naive256pl",
+    "sss_naive512pl",
+    "sss_naive1024pl",
+    "sss_naive2048pl",
+    "sss_noss256",
+    "sss_noss512",
+    "sss_noss1024",
+    "sss_noss2048",
+    "sss_noss256pl",
+    "sss_noss512pl",
+    "sss_noss1024pl",
+    "sss_noss2048pl",
+    "sss256",
+    "sss512",
+    "sss1024",
+    "sss2048",
+    "sss256pl",
+    "sss512pl",
+    "sss1024pl",
+    "sss2048pl",
 };
 
-std::vector<std::string> algorithms_main{"naive_wordwise", "fp32",
-                                         "sss_naive512", "sss_naive512pl",   "sss_noss512",
-                                         "sss512",         "sss512pl"};
+std::vector<std::string> algorithms_main{
+    "naive_wordwise", "fp32",          "sss_naive512", "sss_naive512pl",
+    "sss_noss512",    "sss_noss512pl", "sss512",       "sss512pl"};
 
 class benchmark {
  public:
@@ -302,15 +328,19 @@ int main(int argc, char** argv) {
       "sss_naive256pl");
   b.run<alx::lce::lce_sss_naive<uint8_t, 512, uint64_t, true>>(
       "sss_naive512pl");
-  b.run<alx::lce::lce_sss_naive<uint8_t, 2048, uint64_t, true>>(
-      "sss_naive2048pl");
   b.run<alx::lce::lce_sss_naive<uint8_t, 1024, uint64_t, true>>(
       "sss_naive1024pl");
+  b.run<alx::lce::lce_sss_naive<uint8_t, 2048, uint64_t, true>>(
+      "sss_naive2048pl");
 
-  b.run<alx::lce::lce_sss_noss<uint8_t, 256, uint64_t>>("sss_noss256");
-  b.run<alx::lce::lce_sss_noss<uint8_t, 512, uint64_t>>("sss_noss512");
-  b.run<alx::lce::lce_sss_noss<uint8_t, 1024, uint64_t>>("sss_noss1024");
-  b.run<alx::lce::lce_sss_noss<uint8_t, 2048, uint64_t>>("sss_noss2048");
+  b.run<alx::lce::lce_sss_noss<uint8_t, 256, uint64_t, false>>("sss_noss256");
+  b.run<alx::lce::lce_sss_noss<uint8_t, 512, uint64_t, false>>("sss_noss512");
+  b.run<alx::lce::lce_sss_noss<uint8_t, 1024, uint64_t, false>>("sss_noss1024");
+  b.run<alx::lce::lce_sss_noss<uint8_t, 2048, uint64_t, false>>("sss_noss2048");
+  b.run<alx::lce::lce_sss_noss<uint8_t, 256, uint64_t, true>>("sss_noss256pl");
+  b.run<alx::lce::lce_sss_noss<uint8_t, 512, uint64_t, true>>("sss_noss512pl");
+  b.run<alx::lce::lce_sss_noss<uint8_t, 1024, uint64_t, true>>("sss_noss1024pl");
+  b.run<alx::lce::lce_sss_noss<uint8_t, 2048, uint64_t, true>>("sss_noss2048pl");
 
   b.run<alx::lce::lce_sss<uint8_t, 256, uint64_t, false>>("sss256");
   b.run<alx::lce::lce_sss<uint8_t, 512, uint64_t, false>>("sss512");
