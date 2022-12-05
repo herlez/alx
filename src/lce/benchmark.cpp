@@ -12,13 +12,14 @@
 #include <malloc_count/malloc_count.h>
 #endif
 
+#include <omp.h>
+
 #include <algorithm>
 #include <filesystem>
 #include <iostream>
 #include <string>
 #include <tlx/cmdline_parser.hpp>
 #include <vector>
-#include <omp.h>
 
 #include "lce/lce_classic.hpp"
 #include "lce/lce_fp.hpp"
@@ -34,25 +35,59 @@
 
 namespace fs = std::filesystem;
 
-std::vector<std::string> algorithms{
-    "naive",        "naive_std",   "naive_wordwise", "rk-prezza",
-    "fp16",         "fp32",        "fp64",           "fp128",
-    "sss_naive256", "sss_naive512", "sss_naive1024",  "sss_naive2048",
-    "sss_noss256",  "sss_noss512", "sss_noss1024",   "sss_noss2048",
-    "sss256",       "sss512",      "sss1024",        "sss2048",
-    "classic"};
+std::vector<std::string> algorithms{"naive",
+                                    "naive_std",
+                                    "naive_wordwise",
+                                    "rk-prezza",
+                                    "fp16",
+                                    "fp32",
+                                    "fp64",
+                                    "fp128",
+                                    "sss_naive256",
+                                    "sss_naive512",
+                                    "sss_naive1024",
+                                    "sss_naive2048",
+                                    "sss_noss256",
+                                    "sss_noss512",
+                                    "sss_noss1024",
+                                    "sss_noss2048",
+                                    "sss256",
+                                    "sss512",
+                                    "sss1024",
+                                    "sss2048",
+                                    "sss256pl",
+                                    "sss512pl",
+                                    "sss1024pl",
+                                    "sss2048pl",
+                                    "classic"};
 std::vector<std::string> algorithm_sets{"all", "seq", "par", "main"};
 
 std::vector<std::string> algorithms_seq{"naive", "naive_std", "naive_wordwise"};
 std::vector<std::string> algorithms_par{
-    "fp16",         "fp32",        "fp64",          "fp128",
-    "sss_naive256", "sss_naive512", "sss_naive1024", "sss_naive2048",
-    "sss_noss256",  "sss_noss512", "sss_noss1024",  "sss_noss2048",
-    "sss256",       "sss512",      "sss1024",       "sss2048",
+    "fp16",
+    "fp32",
+    "fp64",
+    "fp128",
+    "sss_naive256",
+    "sss_naive512",
+    "sss_naive1024",
+    "sss_naive2048",
+    "sss_noss256",
+    "sss_noss512",
+    "sss_noss1024",
+    "sss_noss2048",
+    "sss256",
+    "sss512",
+    "sss1024",
+    "sss2048",
+    "sss256pl",
+    "sss512pl",
+    "sss1024pl",
+    "sss2048pl",
 };
 
 std::vector<std::string> algorithms_main{
-    "naive_wordwise", "fp32", "sss_naive512", "sss_noss512", "sss512"};
+    "naive_wordwise", "fp32", "sss_naive512", "sss_noss512", "sss512", "sss512pl"};
 
 class benchmark {
  public:
@@ -193,8 +228,8 @@ class benchmark {
       // OK
     } else {
       if (algo_name != algorithm) {
-          return;
-        }
+        return;
+      }
     }
 
     // Benchmark construction
@@ -276,10 +311,15 @@ int main(int argc, char** argv) {
   b.run<alx::lce::lce_sss_noss<uint8_t, 1024, uint64_t>>("sss_noss1024");
   b.run<alx::lce::lce_sss_noss<uint8_t, 2048, uint64_t>>("sss_noss2048");
 
-  b.run<alx::lce::lce_sss<uint8_t, 256, uint64_t>>("sss256");
-  b.run<alx::lce::lce_sss<uint8_t, 512, uint64_t>>("sss512");
-  b.run<alx::lce::lce_sss<uint8_t, 1024, uint64_t>>("sss1024");
-  b.run<alx::lce::lce_sss<uint8_t, 2048, uint64_t>>("sss2048");
+  b.run<alx::lce::lce_sss<uint8_t, 256, uint64_t, false>>("sss256");
+  b.run<alx::lce::lce_sss<uint8_t, 512, uint64_t, false>>("sss512");
+  b.run<alx::lce::lce_sss<uint8_t, 1024, uint64_t, false>>("sss1024");
+  b.run<alx::lce::lce_sss<uint8_t, 2048, uint64_t, false>>("sss2048");
+
+  b.run<alx::lce::lce_sss<uint8_t, 256, uint64_t, true>>("sss256pl");
+  b.run<alx::lce::lce_sss<uint8_t, 512, uint64_t, true>>("sss512pl");
+  b.run<alx::lce::lce_sss<uint8_t, 1024, uint64_t, true>>("sss1024pl");
+  b.run<alx::lce::lce_sss<uint8_t, 2048, uint64_t, true>>("sss2048pl");
 
   // b.run<alx::lce::lce_classic<uint8_t, uint64_t>>("classic");
 }

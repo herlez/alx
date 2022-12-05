@@ -320,8 +320,8 @@ TEST(LceSssNoSs, All) {
 TEST(LceSss, All) {
   test_empty_constructor<alx::lce::lce_sss<uint8_t, 16>>();
 
-  test_simple<alx::lce::lce_sss<uint8_t, 16>>();
-  test_simple<alx::lce::lce_sss<int8_t, 16>>();
+  test_simple<alx::lce::lce_sss<uint8_t, 16, uint32_t, false>>();
+  test_simple<alx::lce::lce_sss<int8_t, 16, uint32_t, false>>();
   // test_simple<alx::lce::lce_sss<uint16_t, 16>>();
   // test_simple<alx::lce::lce_sss<int16_t, 16>>();
   // test_simple<alx::lce::lce_sss<uint32_t, 16>>();
@@ -331,8 +331,8 @@ TEST(LceSss, All) {
   // test_simple<alx::lce::lce_sss<__uint128_t, 16>>();
   // test_simple<alx::lce::lce_sss<__int128_t, 16>>();
 
-  test_variants<alx::lce::lce_sss<uint8_t, 16>, true, true, true, false>();
-  test_variants<alx::lce::lce_sss<int8_t, 16>, true, true, true, false>();
+  test_variants<alx::lce::lce_sss<uint8_t, 16, uint32_t, false>, true, true, true, false>();
+  test_variants<alx::lce::lce_sss<int8_t, 16, uint32_t, false>, true, true, true, false>();
   // test_variants<alx::lce::lce_sss<uint16_t, 16>>();
   // test_variants<alx::lce::lce_sss<int16_t, 16>>();
   // test_variants<alx::lce::lce_sss<uint32_t, 16>>();
@@ -342,6 +342,33 @@ TEST(LceSss, All) {
   // test_variants<alx::lce::lce_sss<__uint128_t, 16>>();
   // test_variants<alx::lce::lce_sss<__int128_t, 16>>();
 }
+
+TEST(LceSssPL, All) {
+  test_empty_constructor<alx::lce::lce_sss<uint8_t, 16, uint32_t, true>>();
+
+  test_simple<alx::lce::lce_sss<uint8_t, 16, uint32_t, true>>();
+  test_simple<alx::lce::lce_sss<int8_t, 16, uint32_t, true>>();
+  // test_simple<alx::lce::lce_sss<uint16_t, 16>>();
+  // test_simple<alx::lce::lce_sss<int16_t, 16>>();
+  // test_simple<alx::lce::lce_sss<uint32_t, 16>>();
+  // test_simple<alx::lce::lce_sss<int32_t, 16>>();
+  // test_simple<alx::lce::lce_sss<uint64_t, 16>>();
+  // test_simple<alx::lce::lce_sss<int64_t, 16>>();
+  // test_simple<alx::lce::lce_sss<__uint128_t, 16>>();
+  // test_simple<alx::lce::lce_sss<__int128_t, 16>>();
+
+  test_variants<alx::lce::lce_sss<uint8_t, 16, uint32_t, true>, true, true, true, false>();
+  test_variants<alx::lce::lce_sss<int8_t, 16, uint32_t, true>, true, true, true, false>();
+  // test_variants<alx::lce::lce_sss<uint16_t, 16>>();
+  // test_variants<alx::lce::lce_sss<int16_t, 16>>();
+  // test_variants<alx::lce::lce_sss<uint32_t, 16>>();
+  // test_variants<alx::lce::lce_sss<int32_t, 16>>();
+  // test_variants<alx::lce::lce_sss<uint64_t, 16>>();
+  // test_variants<alx::lce::lce_sss<int64_t, 16>>();
+  // test_variants<alx::lce::lce_sss<__uint128_t, 16>>();
+  // test_variants<alx::lce::lce_sss<__int128_t, 16>>();
+}
+
 
 TEST(LceMemcmp, SS) {
   test_empty_constructor<alx::lce::lce_memcmp>();
