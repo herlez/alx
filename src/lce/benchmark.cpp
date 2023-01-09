@@ -202,6 +202,31 @@ class benchmark {
       for (size_t i = num_unique_queries; i < queries.size(); ++i) {
         queries[i] = queries[i % num_unique_queries];
       }
+
+      size_t wanted_bucket_size = 1000;
+      size_t bucket_range = (text.size() / queries.size() * wanted_bucket_size);
+
+      size_t num_buckets = (text.size() / bucket_range) + 1;
+      double expected_bucket_size = 1.0 * queries.size() / num_buckets;
+
+      std::vector<size_t> bin_histogram(num_buckets);
+      for (auto const& q : queries) {
+        bin_histogram[q / bucket_range]++;
+      }
+      double chi_square{0};
+      for (auto const& bin : bin_histogram) {
+        double counted = bin;
+        chi_square += ((counted - expected_bucket_size) *
+                       (counted - expected_bucket_size)) /
+                      expected_bucket_size;
+      }
+      double max_chi = (queries.size() - expected_bucket_size) *
+                           (queries.size() - expected_bucket_size) /
+                           expected_bucket_size +
+                       ((num_buckets - 1) * expected_bucket_size *
+                        expected_bucket_size / expected_bucket_size);
+      fmt::print(" q_chi2={}", chi_square);
+      fmt::print(" q_chi2/max={}", chi_square / max_chi);
     }
     assert(queries.size() == 0 || queries.size() == num_queries * 2);
     // fmt::print(" q_path={}", cur_query_path.string());
@@ -308,48 +333,43 @@ int main(int argc, char** argv) {
     return -1;
   }
 
-  b.run<alx::lce::lce_naive<>>("naive");
-  b.run<alx::lce::lce_naive_std<>>("naive_std");
-  b.run<alx::lce::lce_naive_wordwise<>>("naive_wordwise");
+  using namespace alx::lce;
+  b.run<lce_naive<>>("naive");
+  b.run<lce_naive_std<>>("naive_std");
+  b.run<lce_naive_wordwise<>>("naive_wordwise");
 
-  b.run<alx::lce::lce_fp<uint8_t, 16>>("fp16");
-  b.run<alx::lce::lce_fp<uint8_t, 32>>("fp32");
-  b.run<alx::lce::lce_fp<uint8_t, 64>>("fp64");
-  b.run<alx::lce::lce_fp<uint8_t, 128>>("fp128");
+  b.run<lce_fp<uint8_t, 16>>("fp16");
+  b.run<lce_fp<uint8_t, 32>>("fp32");
+  b.run<lce_fp<uint8_t, 64>>("fp64");
+  b.run<lce_fp<uint8_t, 128>>("fp128");
   b.run<rklce::lce_rk_prezza>("rk-prezza");
 
-  b.run<alx::lce::lce_sss_naive<uint8_t, 256, uint64_t, false>>("sss_naive256");
-  b.run<alx::lce::lce_sss_naive<uint8_t, 512, uint64_t, false>>("sss_naive512");
-  b.run<alx::lce::lce_sss_naive<uint8_t, 1024, uint64_t, false>>(
-      "sss_naive1024");
-  b.run<alx::lce::lce_sss_naive<uint8_t, 2048, uint64_t, false>>(
-      "sss_naive2048");
-  b.run<alx::lce::lce_sss_naive<uint8_t, 256, uint64_t, true>>(
-      "sss_naive256pl");
-  b.run<alx::lce::lce_sss_naive<uint8_t, 512, uint64_t, true>>(
-      "sss_naive512pl");
-  b.run<alx::lce::lce_sss_naive<uint8_t, 1024, uint64_t, true>>(
-      "sss_naive1024pl");
-  b.run<alx::lce::lce_sss_naive<uint8_t, 2048, uint64_t, true>>(
-      "sss_naive2048pl");
+  b.run<lce_sss_naive<uint8_t, 256, uint64_t, false>>("sss_naive256");
+  b.run<lce_sss_naive<uint8_t, 512, uint64_t, false>>("sss_naive512");
+  b.run<lce_sss_naive<uint8_t, 1024, uint64_t, false>>("sss_naive1024");
+  b.run<lce_sss_naive<uint8_t, 2048, uint64_t, false>>("sss_naive2048");
+  b.run<lce_sss_naive<uint8_t, 256, uint64_t, true>>("sss_naive256pl");
+  b.run<lce_sss_naive<uint8_t, 512, uint64_t, true>>("sss_naive512pl");
+  b.run<lce_sss_naive<uint8_t, 1024, uint64_t, true>>("sss_naive1024pl");
+  b.run<lce_sss_naive<uint8_t, 2048, uint64_t, true>>("sss_naive2048pl");
 
-  b.run<alx::lce::lce_sss_noss<uint8_t, 256, uint64_t, false>>("sss_noss256");
-  b.run<alx::lce::lce_sss_noss<uint8_t, 512, uint64_t, false>>("sss_noss512");
-  b.run<alx::lce::lce_sss_noss<uint8_t, 1024, uint64_t, false>>("sss_noss1024");
-  b.run<alx::lce::lce_sss_noss<uint8_t, 2048, uint64_t, false>>("sss_noss2048");
-  b.run<alx::lce::lce_sss_noss<uint8_t, 256, uint64_t, true>>("sss_noss256pl");
-  b.run<alx::lce::lce_sss_noss<uint8_t, 512, uint64_t, true>>("sss_noss512pl");
-  b.run<alx::lce::lce_sss_noss<uint8_t, 1024, uint64_t, true>>("sss_noss1024pl");
-  b.run<alx::lce::lce_sss_noss<uint8_t, 2048, uint64_t, true>>("sss_noss2048pl");
+  b.run<lce_sss_noss<uint8_t, 256, uint64_t, false>>("sss_noss256");
+  b.run<lce_sss_noss<uint8_t, 512, uint64_t, false>>("sss_noss512");
+  b.run<lce_sss_noss<uint8_t, 1024, uint64_t, false>>("sss_noss1024");
+  b.run<lce_sss_noss<uint8_t, 2048, uint64_t, false>>("sss_noss2048");
+  b.run<lce_sss_noss<uint8_t, 256, uint64_t, true>>("sss_noss256pl");
+  b.run<lce_sss_noss<uint8_t, 512, uint64_t, true>>("sss_noss512pl");
+  b.run<lce_sss_noss<uint8_t, 1024, uint64_t, true>>("sss_noss1024pl");
+  b.run<lce_sss_noss<uint8_t, 2048, uint64_t, true>>("sss_noss2048pl");
 
-  b.run<alx::lce::lce_sss<uint8_t, 256, uint64_t, false>>("sss256");
-  b.run<alx::lce::lce_sss<uint8_t, 512, uint64_t, false>>("sss512");
-  b.run<alx::lce::lce_sss<uint8_t, 1024, uint64_t, false>>("sss1024");
-  b.run<alx::lce::lce_sss<uint8_t, 2048, uint64_t, false>>("sss2048");
-  b.run<alx::lce::lce_sss<uint8_t, 256, uint64_t, true>>("sss256pl");
-  b.run<alx::lce::lce_sss<uint8_t, 512, uint64_t, true>>("sss512pl");
-  b.run<alx::lce::lce_sss<uint8_t, 1024, uint64_t, true>>("sss1024pl");
-  b.run<alx::lce::lce_sss<uint8_t, 2048, uint64_t, true>>("sss2048pl");
+  b.run<lce_sss<uint8_t, 256, uint64_t, false>>("sss256");
+  b.run<lce_sss<uint8_t, 512, uint64_t, false>>("sss512");
+  b.run<lce_sss<uint8_t, 1024, uint64_t, false>>("sss1024");
+  b.run<lce_sss<uint8_t, 2048, uint64_t, false>>("sss2048");
+  b.run<lce_sss<uint8_t, 256, uint64_t, true>>("sss256pl");
+  b.run<lce_sss<uint8_t, 512, uint64_t, true>>("sss512pl");
+  b.run<lce_sss<uint8_t, 1024, uint64_t, true>>("sss1024pl");
+  b.run<lce_sss<uint8_t, 2048, uint64_t, true>>("sss2048pl");
 
-  // b.run<alx::lce::lce_classic<uint8_t, uint64_t>>("classic");
+  // b.run<lce_classic<uint8_t, uint64_t>>("classic");
 }

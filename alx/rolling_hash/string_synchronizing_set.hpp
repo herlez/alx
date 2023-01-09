@@ -69,7 +69,7 @@ class sss {
 
         const size_t begin = t * slice_size;
         const size_t end = (t < nt - 1) ? (t + 1) * slice_size : sss_end;
-
+        sss_part[t] = std::vector<t_index>{};
         std::tie(sss_part[t], fps_part[t]) =
             fill_synchronizing_set_runs(text, size, begin, end);
       }
