@@ -26,6 +26,7 @@
 #include "lce/lce_naive.hpp"
 #include "lce/lce_naive_std.hpp"
 #include "lce/lce_naive_wordwise.hpp"
+#include "lce/lce_naive_wordwise_xor.hpp"
 #include "lce/lce_rk_prezza.hpp"
 #include "lce/lce_sss.hpp"
 #include "lce/lce_sss_naive.hpp"
@@ -35,42 +36,20 @@
 
 namespace fs = std::filesystem;
 
-std::vector<std::string> algorithms{"naive",
-                                    "naive_std",
-                                    "naive_wordwise",
-                                    "rk-prezza",
-                                    "fp16",
-                                    "fp32",
-                                    "fp64",
-                                    "fp128",
-                                    "sss_naive256",
-                                    "sss_naive512",
-                                    "sss_naive1024",
-                                    "sss_naive2048",
-                                    "sss_naive256pl",
-                                    "sss_naive512pl",
-                                    "sss_naive1024pl",
-                                    "sss_naive2048pl",
-                                    "sss_noss256",
-                                    "sss_noss512",
-                                    "sss_noss1024",
-                                    "sss_noss2048",
-                                    "sss_noss256pl",
-                                    "sss_noss512pl",
-                                    "sss_noss1024pl",
-                                    "sss_noss2048pl",
-                                    "sss256",
-                                    "sss512",
-                                    "sss1024",
-                                    "sss2048",
-                                    "sss256pl",
-                                    "sss512pl",
-                                    "sss1024pl",
-                                    "sss2048pl",
-                                    "classic"};
+std::vector<std::string> algorithms{
+    "naive",           "naive_std",      "naive_wordwise", "naive_wordwise_xor",
+    "rk-prezza",       "fp16",           "fp32",           "fp64",
+    "fp128",           "sss_naive256",   "sss_naive512",   "sss_naive1024",
+    "sss_naive2048",   "sss_naive256pl", "sss_naive512pl", "sss_naive1024pl",
+    "sss_naive2048pl", "sss_noss256",    "sss_noss512",    "sss_noss1024",
+    "sss_noss2048",    "sss_noss256pl",  "sss_noss512pl",  "sss_noss1024pl",
+    "sss_noss2048pl",  "sss256",         "sss512",         "sss1024",
+    "sss2048",         "sss256pl",       "sss512pl",       "sss1024pl",
+    "sss2048pl",       "classic"};
 std::vector<std::string> algorithm_sets{"all", "seq", "par", "main"};
 
-std::vector<std::string> algorithms_seq{"naive", "naive_std", "naive_wordwise"};
+std::vector<std::string> algorithms_seq{"naive", "naive_std", "naive_wordwise",
+                                        "naive_wordwise_xor"};
 std::vector<std::string> algorithms_par{
     "fp16",
     "fp32",
@@ -103,8 +82,8 @@ std::vector<std::string> algorithms_par{
 };
 
 std::vector<std::string> algorithms_main{
-    "naive_wordwise", "fp32",          "sss_naive512", "sss_naive512pl",
-    "sss_noss512",    "sss_noss512pl", "sss512",       "sss512pl"};
+    "naive_wordwise_xor", "fp32",          "sss_naive512", "sss_naive512pl",
+    "sss_noss512",        "sss_noss512pl", "sss512",       "sss512pl"};
 
 class benchmark {
  public:
@@ -337,6 +316,7 @@ int main(int argc, char** argv) {
   b.run<lce_naive<>>("naive");
   b.run<lce_naive_std<>>("naive_std");
   b.run<lce_naive_wordwise<>>("naive_wordwise");
+  b.run<lce_naive_wordwise_xor<>>("naive_wordwise_xor");
 
   b.run<lce_fp<uint8_t, 16>>("fp16");
   b.run<lce_fp<uint8_t, 32>>("fp32");

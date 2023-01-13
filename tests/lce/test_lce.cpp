@@ -17,10 +17,11 @@
 #include "lce/lce_naive.hpp"
 #include "lce/lce_naive_std.hpp"
 #include "lce/lce_naive_wordwise.hpp"
+#include "lce/lce_naive_wordwise_xor.hpp"
 #include "lce/lce_rk_prezza.hpp"
+#include "lce/lce_sss.hpp"
 #include "lce/lce_sss_naive.hpp"
 #include "lce/lce_sss_noss.hpp"
-#include "lce/lce_sss.hpp"
 
 template <typename lce_ds_type>
 void test_empty_constructor() {
@@ -77,7 +78,8 @@ void test_simple_classic_for_sss() {
   std::vector<uint8_t> text_copy = text;
   // Test pointer constructor
   {
-    lce_ds_type ds(text.data(), text.size(), fps_reduced.data(), fps_reduced.size(), sss);
+    lce_ds_type ds(text.data(), text.size(), fps_reduced.data(),
+                   fps_reduced.size(), sss);
     EXPECT_EQ(ds.lce_uneq(0, 2), 1000);
     EXPECT_EQ(ds.lce_uneq(1, 2), 0);
   }
@@ -234,6 +236,32 @@ TEST(LceNaiveWordwise, All) {
   test_variants<alx::lce::lce_naive_wordwise<__int128_t>>();
 }
 
+TEST(LceNaiveWordwiseXor, All) {
+  test_empty_constructor<alx::lce::lce_naive_wordwise_xor<uint8_t>>();
+
+  test_simple<alx::lce::lce_naive_wordwise_xor<uint8_t>>();
+  test_simple<alx::lce::lce_naive_wordwise_xor<int8_t>>();
+  test_simple<alx::lce::lce_naive_wordwise_xor<uint16_t>>();
+  test_simple<alx::lce::lce_naive_wordwise_xor<int16_t>>();
+  test_simple<alx::lce::lce_naive_wordwise_xor<uint32_t>>();
+  test_simple<alx::lce::lce_naive_wordwise_xor<int32_t>>();
+  test_simple<alx::lce::lce_naive_wordwise_xor<uint64_t>>();
+  test_simple<alx::lce::lce_naive_wordwise_xor<int64_t>>();
+  test_simple<alx::lce::lce_naive_wordwise_xor<__uint128_t>>();
+  test_simple<alx::lce::lce_naive_wordwise_xor<__int128_t>>();
+
+  test_variants<alx::lce::lce_naive_wordwise_xor<uint8_t>>();
+  test_variants<alx::lce::lce_naive_wordwise_xor<int8_t>>();
+  test_variants<alx::lce::lce_naive_wordwise_xor<uint16_t>>();
+  test_variants<alx::lce::lce_naive_wordwise_xor<int16_t>>();
+  test_variants<alx::lce::lce_naive_wordwise_xor<uint32_t>>();
+  test_variants<alx::lce::lce_naive_wordwise_xor<int32_t>>();
+  test_variants<alx::lce::lce_naive_wordwise_xor<uint64_t>>();
+  test_variants<alx::lce::lce_naive_wordwise_xor<int64_t>>();
+  test_variants<alx::lce::lce_naive_wordwise_xor<__uint128_t>>();
+  test_variants<alx::lce::lce_naive_wordwise_xor<__int128_t>>();
+}
+
 TEST(LceClassic, All) {
   test_empty_constructor<alx::lce::lce_classic<unsigned char>>();
 
@@ -330,8 +358,10 @@ TEST(LceSssNoSs, All) {
   // test_simple<alx::lce::lce_sss_noss<__uint128_t, 16>>();
   // test_simple<alx::lce::lce_sss_noss<__int128_t, 16>>();
 
-  test_variants<alx::lce::lce_sss_noss<uint8_t, 16, uint32_t, false>, true, true, true, false>();
-  test_variants<alx::lce::lce_sss_noss<int8_t, 16, uint32_t, false>, true, true, true, false>();
+  test_variants<alx::lce::lce_sss_noss<uint8_t, 16, uint32_t, false>, true,
+                true, true, false>();
+  test_variants<alx::lce::lce_sss_noss<int8_t, 16, uint32_t, false>, true, true,
+                true, false>();
   // test_variants<alx::lce::lce_sss_noss<uint16_t, 16>>();
   // test_variants<alx::lce::lce_sss_noss<int16_t, 16>>();
   // test_variants<alx::lce::lce_sss_noss<uint32_t, 16>>();
@@ -355,8 +385,10 @@ TEST(LceSssNoSsPL, All) {
   // test_simple<alx::lce::lce_sss_noss<__uint128_t, 16>>();
   // test_simple<alx::lce::lce_sss_noss<__int128_t, 16>>();
 
-  test_variants<alx::lce::lce_sss_noss<uint8_t, 16, uint32_t, true>, true, true, true, false>();
-  test_variants<alx::lce::lce_sss_noss<int8_t, 16, uint32_t, true>, true, true, true, false>();
+  test_variants<alx::lce::lce_sss_noss<uint8_t, 16, uint32_t, true>, true, true,
+                true, false>();
+  test_variants<alx::lce::lce_sss_noss<int8_t, 16, uint32_t, true>, true, true,
+                true, false>();
   // test_variants<alx::lce::lce_sss_noss<uint16_t, 16>>();
   // test_variants<alx::lce::lce_sss_noss<int16_t, 16>>();
   // test_variants<alx::lce::lce_sss_noss<uint32_t, 16>>();
@@ -381,8 +413,10 @@ TEST(LceSss, All) {
   // test_simple<alx::lce::lce_sss<__uint128_t, 16>>();
   // test_simple<alx::lce::lce_sss<__int128_t, 16>>();
 
-  test_variants<alx::lce::lce_sss<uint8_t, 16, uint32_t, false>, true, true, true, false>();
-  test_variants<alx::lce::lce_sss<int8_t, 16, uint32_t, false>, true, true, true, false>();
+  test_variants<alx::lce::lce_sss<uint8_t, 16, uint32_t, false>, true, true,
+                true, false>();
+  test_variants<alx::lce::lce_sss<int8_t, 16, uint32_t, false>, true, true,
+                true, false>();
   // test_variants<alx::lce::lce_sss<uint16_t, 16>>();
   // test_variants<alx::lce::lce_sss<int16_t, 16>>();
   // test_variants<alx::lce::lce_sss<uint32_t, 16>>();
@@ -407,8 +441,10 @@ TEST(LceSssPL, All) {
   // test_simple<alx::lce::lce_sss<__uint128_t, 16>>();
   // test_simple<alx::lce::lce_sss<__int128_t, 16>>();
 
-  test_variants<alx::lce::lce_sss<uint8_t, 16, uint32_t, true>, true, true, true, false>();
-  test_variants<alx::lce::lce_sss<int8_t, 16, uint32_t, true>, true, true, true, false>();
+  test_variants<alx::lce::lce_sss<uint8_t, 16, uint32_t, true>, true, true,
+                true, false>();
+  test_variants<alx::lce::lce_sss<int8_t, 16, uint32_t, true>, true, true, true,
+                false>();
   // test_variants<alx::lce::lce_sss<uint16_t, 16>>();
   // test_variants<alx::lce::lce_sss<int16_t, 16>>();
   // test_variants<alx::lce::lce_sss<uint32_t, 16>>();
@@ -418,7 +454,6 @@ TEST(LceSssPL, All) {
   // test_variants<alx::lce::lce_sss<__uint128_t, 16>>();
   // test_variants<alx::lce::lce_sss<__int128_t, 16>>();
 }
-
 
 TEST(LceMemcmp, SS) {
   test_empty_constructor<alx::lce::lce_memcmp>();

@@ -93,8 +93,10 @@ class pred_index {
 
   // finds the smallest element greater than OR equal to x
   inline result successor(const T x) const {
-    if ((x <= m_min)) [[unlikely]] 	 return result{true, 0};
-    if ((x > m_max)) [[unlikely]] 	 return result{false, 0};
+    if ((x <= m_min)) [[unlikely]]
+      return result{true, 0};
+    if ((x > m_max)) [[unlikely]]
+      return result{false, 0};
 
     const uint64_t key = hi(x);
     const size_t p = m_hi_idx[key];
