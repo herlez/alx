@@ -36,16 +36,42 @@
 
 namespace fs = std::filesystem;
 
-std::vector<std::string> algorithms{
-    "naive",           "naive_std",      "naive_wordwise", "naive_wordwise_xor",
-    "rk-prezza",       "fp16",           "fp32",           "fp64",
-    "fp128",           "sss_naive256",   "sss_naive512",   "sss_naive1024",
-    "sss_naive2048",   "sss_naive256pl", "sss_naive512pl", "sss_naive1024pl",
-    "sss_naive2048pl", "sss_noss256",    "sss_noss512",    "sss_noss1024",
-    "sss_noss2048",    "sss_noss256pl",  "sss_noss512pl",  "sss_noss1024pl",
-    "sss_noss2048pl",  "sss256",         "sss512",         "sss1024",
-    "sss2048",         "sss256pl",       "sss512pl",       "sss1024pl",
-    "sss2048pl",       "classic"};
+std::vector<std::string> algorithms{"naive",
+                                    "naive_std",
+                                    "naive_wordwise",
+                                    "naive_wordwise_xor",
+                                    "rk-prezza",
+                                    "fp1",
+                                    "fp64",
+                                    "fp128",
+                                    "fp256",
+                                    "fp512",
+                                    "fp_unlimited",
+                                    "sss_naive256",
+                                    "sss_naive512",
+                                    "sss_naive1024",
+                                    "sss_naive2048",
+                                    "sss_naive256pl",
+                                    "sss_naive512pl",
+                                    "sss_naive1024pl",
+                                    "sss_naive2048pl",
+                                    "sss_noss256",
+                                    "sss_noss512",
+                                    "sss_noss1024",
+                                    "sss_noss2048",
+                                    "sss_noss256pl",
+                                    "sss_noss512pl",
+                                    "sss_noss1024pl",
+                                    "sss_noss2048pl",
+                                    "sss256",
+                                    "sss512",
+                                    "sss1024",
+                                    "sss2048",
+                                    "sss256pl",
+                                    "sss512pl",
+                                    "sss1024pl",
+                                    "sss2048pl",
+                                    "classic"};
 std::vector<std::string> algorithm_sets{"all", "seq", "par", "main"};
 
 std::vector<std::string> algorithms_seq{"naive", "naive_std", "naive_wordwise",
@@ -318,10 +344,12 @@ int main(int argc, char** argv) {
   b.run<lce_naive_wordwise<>>("naive_wordwise");
   b.run<lce_naive_wordwise_xor<>>("naive_wordwise_xor");
 
-  b.run<lce_fp<uint8_t, 16>>("fp16");
-  b.run<lce_fp<uint8_t, 32>>("fp32");
+  b.run<lce_fp<uint8_t, 1>>("fp1");
   b.run<lce_fp<uint8_t, 64>>("fp64");
   b.run<lce_fp<uint8_t, 128>>("fp128");
+  b.run<lce_fp<uint8_t, 256>>("fp256");
+  b.run<lce_fp<uint8_t, 512>>("fp512");
+  b.run<lce_fp<uint8_t, (size_t{1} << 40)>>("fp_unlimited");
   b.run<rklce::lce_rk_prezza>("rk-prezza");
 
   b.run<lce_sss_naive<uint8_t, 256, uint64_t, false>>("sss_naive256");
