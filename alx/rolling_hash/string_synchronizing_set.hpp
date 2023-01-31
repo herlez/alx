@@ -345,7 +345,8 @@ class sss {
 
         // extend run naivly to the right
         size_t run_end = next_min;  // inclusive
-        while (run_end < to + 2 * t_tau - 2 &&
+        // while (run_end < to + 2 * t_tau - 2 &&
+        while (run_end < (size - 1) &&
                text[run_end + 1] == text[run_end - period + 1]) {
           ++run_end;
         }

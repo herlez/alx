@@ -46,26 +46,27 @@ std::vector<typename sss_type::index_type> reduce_fps_3tau_lexicographic(
 
   // sort sss-pos by 3tau-infix
   std::vector<index_type> sss_sorted = sss;
-  ips4o::parallel::sort(sss_sorted.begin(), sss_sorted.end(),
-            [&text, &text_size, &sync_set](index_type lhs, index_type rhs) {
-              if (lhs == rhs) {
-                return false;
-              }
-              assert(lhs != rhs);
-              size_t lce = lce_naive_wordwise<uint8_t>::lce_up_to(
-                  text, text_size, lhs, rhs, 3 * tau);
+  ips4o::parallel::sort(
+      sss_sorted.begin(), sss_sorted.end(),
+      [&text, &text_size, &sync_set](index_type lhs, index_type rhs) {
+        if (lhs == rhs) {
+          return false;
+        }
+        assert(lhs != rhs);
+        size_t lce = lce_naive_wordwise<uint8_t>::lce_up_to(text, text_size,
+                                                            lhs, rhs, 3 * tau);
 
-              if (std::max(lhs, rhs) + lce == text_size) {
-                return lhs > rhs;
-              }
-              if (text[lhs + lce] != text[rhs + lce]) {
-                return text[lhs + lce] < text[rhs + lce];
-              }
-              if (sync_set.get_run_info(lhs) != sync_set.get_run_info(rhs)) {
-                return sync_set.get_run_info(lhs) < sync_set.get_run_info(rhs);
-              }
-              return false;
-            });
+        if (std::max(lhs, rhs) + lce == text_size) {
+          return lhs > rhs;
+        }
+        if (text[lhs + lce] != text[rhs + lce]) {
+          return text[lhs + lce] < text[rhs + lce];
+        }
+        if (sync_set.get_run_info(lhs) != sync_set.get_run_info(rhs)) {
+          return sync_set.get_run_info(lhs) < sync_set.get_run_info(rhs);
+        }
+        return false;
+      });
 
   for (size_t idx = 1; idx < sss_sorted.size(); ++idx) {
     size_t i = sss_sorted[idx - 1];
@@ -112,9 +113,9 @@ std::vector<typename sss_type::index_type> reduce_fps_3tau_lexicographic(
     assert(rank_tuples[begin].rank == begin + 1);
     all_ranks_equal[t] = (max_ranks[t] == begin + 1);
     rank_extends_prev_block[t] =
-        (t == 0) ? false
-                 : eq_three_tau(text, text_size, sss_sorted[begin - 1],
-                                sss_sorted[begin], sync_set);
+        (begin == 0) ? false
+                     : eq_three_tau(text, text_size, sss_sorted[begin - 1],
+                                    sss_sorted[begin], sync_set);
 #pragma omp barrier
     // Now adjust ranks between blocks
     if (t != 0) {
@@ -149,8 +150,9 @@ std::vector<typename sss_type::index_type> reduce_fps_3tau_lexicographic(
   }
 
   // Sort tuples by pos
-  ips4o::parallel::sort(rank_tuples.begin(), rank_tuples.end(),
-              [](auto lhs, auto rhs) { return lhs.index < rhs.index; });
+  ips4o::parallel::sort(
+      rank_tuples.begin(), rank_tuples.end(),
+      [](auto lhs, auto rhs) { return lhs.index < rhs.index; });
 
   // Overwrite
   std::vector<index_type> fps_reduced(sss.size());

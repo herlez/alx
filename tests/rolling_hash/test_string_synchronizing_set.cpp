@@ -362,6 +362,7 @@ TEST(StringSynchronizingSet, Repetetive) {
     EXPECT_TRUE(check_string_synchronizing_set(text, sss));
     fmt::print("sss_size={} (approx {})\n", sss.size(),
                text.size() * 2 / (sss.tau + 1));
+    EXPECT_TRUE(sss.has_runs());
     EXPECT_NE(sss.get_run_info(5), 0);
     EXPECT_NE(sss.get_run_info(2059), 0);
     EXPECT_TRUE(sss.get_run_info(5) < sss.get_run_info(2059))
@@ -372,6 +373,7 @@ TEST(StringSynchronizingSet, Repetetive) {
     EXPECT_TRUE(check_string_synchronizing_set(text, sss));
     fmt::print("sss_size={} (approx {})\n", sss.size(),
                text.size() * 2 / (sss.tau + 1));
+    EXPECT_TRUE(sss.has_runs());
     EXPECT_NE(sss.get_run_info(5), 0);
     EXPECT_NE(sss.get_run_info(2059), 0);
     EXPECT_TRUE(sss.get_run_info(5) < sss.get_run_info(2059))
