@@ -291,6 +291,7 @@ class benchmark {
     size_t lce_cur = lce_from;
     while (lce_cur < lce_to) {
       fmt::print("RESULT algo={}_queries", algo_name);
+      fmt::print(" text={}", text_path.filename().string());
       fmt::print(" lce_range={}", lce_cur);
       load_queries(lce_cur);
       benchmark_queries<lce_ds_type>(lce_ds);
