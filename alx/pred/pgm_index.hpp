@@ -9,7 +9,10 @@
 
 #pragma once
 
+#include <algorithm>
 #include <pgm_index.hpp>
+
+#include "pred_result.hpp"
 
 namespace alx::pred {
 
@@ -18,16 +21,13 @@ template <typename T, size_t m_epsilon>
 class pgm_index {
  public:
   typedef T data_type;
-  inline pgm_index() {
-  }
+  inline pgm_index() {}
 
   template <typename C>
   pgm_index(C const& container)
-      : pgm_index(container.begin(), container.end()) {
-  }
+      : pgm_index(container.begin(), container.end()) {}
 
-  inline pgm_index(T const* data, size_t size) : pgm_index(data, data + size) {
-  }
+  inline pgm_index(T const* data, size_t size) : pgm_index(data, data + size) {}
 
   template <typename I>
   inline pgm_index(I begin, I end)

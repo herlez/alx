@@ -29,6 +29,8 @@
 #endif
 #endif
 
+#include <gsaca-double-sort/uint_types.hpp>  // uint40_t
+
 namespace alx::lce {
 
 template <typename t_char_type = uint8_t, uint64_t t_tau = 1024,
@@ -37,9 +39,7 @@ class lce_sss {
  public:
   typedef t_char_type char_type;
   __extension__ typedef unsigned __int128 uint128_t;
-
-  lce_sss() : m_text(nullptr), m_size(0) {
-  }
+  lce_sss() : m_text(nullptr), m_size(0) {}
 
   lce_sss(char_type const* text, size_t size) : m_text(text), m_size(size) {
     assert(sizeof(t_char_type) == 1);
@@ -71,10 +71,10 @@ class lce_sss {
     mem_before = malloc_count_current();
     malloc_count_reset_peak();
 #endif
-
 #endif
-    m_pred = alx::pred::pred_index<t_index_type, 7, t_index_type>(
-        m_sync_set.get_sss());
+    m_pred =
+        alx::pred::pred_index<t_index_type, std::bit_width(t_tau) - 1,
+                              gsaca_lyndon::uint40_t>(m_sync_set.get_sss());
 
 #ifdef ALX_BENCHMARK_INTERNAL
     fmt::print(" pred_construct_time={}", t.get_and_reset());
@@ -84,15 +84,29 @@ class lce_sss {
 #endif
 #endif
 
-    std::vector<t_index_type> const& sss = m_sync_set.get_sss();
+#ifdef ALX_BENCHMARK_INTERNAL
+#ifdef ALX_BENCHMARK_SPACE
+    mem_before = malloc_count_current();
+    malloc_count_reset_peak();
+#endif
+#endif
 
+    std::vector<t_index_type> const& sss = m_sync_set.get_sss();
     std::vector<t_index_type> reduced_fps = reduce_fps_3tau_lexicographic(
         reinterpret_cast<uint8_t const*>(m_text), m_size, m_sync_set);
+
 #ifdef ALX_BENCHMARK_INTERNAL
     fmt::print(" meta_symbols_time={}", t.get_and_reset());
 #ifdef ALX_BENCHMARK_SPACE
     fmt::print(" meta_reduction_mem={}", malloc_count_current() - mem_before);
     fmt::print(" meta_reduction_mem_peak={}", malloc_count_peak() - mem_before);
+#endif
+#endif
+
+#ifdef ALX_BENCHMARK_INTERNAL
+#ifdef ALX_BENCHMARK_SPACE
+    mem_before = malloc_count_current();
+    malloc_count_reset_peak();
 #endif
 #endif
 
@@ -112,8 +126,7 @@ class lce_sss {
   }
 
   template <typename C>
-  lce_sss(C const& container) : lce_sss(container.data(), container.size()) {
-  }
+  lce_sss(C const& container) : lce_sss(container.data(), container.size()) {}
 
   // Return the number of common letters in text[i..] and text[j..].
   size_t lce(size_t i, size_t j) const {
@@ -217,20 +230,17 @@ class lce_sss {
         ((j + lce_val != m_size) && m_text[i + lce_val] < m_text[j + lce_val]));
   }
 
-  char_type operator[](size_t i) {
-    return m_text[i];
-  }
+  char_type operator[](size_t i) { return m_text[i]; }
 
-  size_t size() {
-    return m_size;
-  }
+  size_t size() { return m_size; }
 
- private:
  private:
   char_type const* m_text;
   size_t m_size;
 
-  alx::pred::pred_index<t_index_type, 7, t_index_type> m_pred;
+  alx::pred::pred_index<t_index_type, std::bit_width(t_tau) - 1,
+                        gsaca_lyndon::uint40_t>
+      m_pred;
   rolling_hash::sss<t_index_type, t_tau> m_sync_set;
   alx::lce::lce_classic_for_sss<t_index_type, t_tau> m_fp_lce;
 };

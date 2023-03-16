@@ -27,6 +27,8 @@
 #endif
 #endif
 
+#include <gsaca-double-sort/uint_types.hpp>  // uint40_t
+
 namespace alx::lce {
 
 template <typename t_char_type = uint8_t, uint64_t t_tau = 1024,
@@ -36,8 +38,7 @@ class lce_sss_naive {
   typedef t_char_type char_type;
   __extension__ typedef unsigned __int128 uint128_t;
 
-  lce_sss_naive() : m_text(nullptr), m_size(0) {
-  }
+  lce_sss_naive() : m_text(nullptr), m_size(0) {}
 
   lce_sss_naive(char_type const* text, size_t size)
       : m_text(text), m_size(size) {
@@ -72,8 +73,9 @@ class lce_sss_naive {
 #endif
 
 #endif
-    m_pred = alx::pred::pred_index<t_index_type, 7, t_index_type>(
-        m_sync_set.get_sss());
+    m_pred =
+        alx::pred::pred_index<t_index_type, std::bit_width(t_tau) - 1,
+                              gsaca_lyndon::uint40_t>(m_sync_set.get_sss());
 
 #ifdef ALX_BENCHMARK_INTERNAL
     fmt::print(" pred_construct_time={}", t.get_and_reset());
@@ -86,8 +88,7 @@ class lce_sss_naive {
 
   template <typename C>
   lce_sss_naive(C const& container)
-      : lce_sss_naive(container.data(), container.size()) {
-  }
+      : lce_sss_naive(container.data(), container.size()) {}
 
   // Return the number of common letters in text[i..] and text[j..].
   size_t lce(size_t i, size_t j) const {
@@ -247,20 +248,18 @@ class lce_sss_naive {
     return lce;
   }
 
-  char_type operator[](size_t i) {
-    return m_text[i];
-  }
+  char_type operator[](size_t i) { return m_text[i]; }
 
-  size_t size() {
-    return m_size;
-  }
+  size_t size() { return m_size; }
 
  private:
  private:
   char_type const* m_text;
   size_t m_size;
 
-  alx::pred::pred_index<t_index_type, 7, t_index_type> m_pred;
+  alx::pred::pred_index<t_index_type, std::bit_width(t_tau) - 1,
+                        gsaca_lyndon::uint40_t>
+      m_pred;
   rolling_hash::sss<t_index_type, t_tau> m_sync_set;
 };
 }  // namespace alx::lce

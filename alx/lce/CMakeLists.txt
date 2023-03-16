@@ -27,17 +27,17 @@ target_link_libraries(alx_lce INTERFACE alx_lce_fp)
 
 add_library(alx_lce_sss_naive INTERFACE)
 target_include_directories(alx_lce_sss_naive INTERFACE ${ALX_INCLUDE_DIR})
-target_link_libraries(alx_lce_sss_naive INTERFACE alx_string_synchronizing_set alx_pred_index)
+target_link_libraries(alx_lce_sss_naive INTERFACE alx_string_synchronizing_set alx_pred_index fmt::fmt-header-only)
 target_link_libraries(alx_lce INTERFACE alx_lce_sss_naive)
 
 add_library(alx_lce_sss_noss INTERFACE)
 target_include_directories(alx_lce_sss_noss INTERFACE ${ALX_INCLUDE_DIR})
-target_link_libraries(alx_lce_sss_noss INTERFACE alx_string_synchronizing_set alx_pred_index)
+target_link_libraries(alx_lce_sss_noss INTERFACE alx_string_synchronizing_set alx_pred_index fmt::fmt-header-only)
 target_link_libraries(alx_lce INTERFACE alx_lce_sss_noss)
 
 add_library(alx_lce_sss INTERFACE)
 target_include_directories(alx_lce_sss INTERFACE ${ALX_INCLUDE_DIR})
-target_link_libraries(alx_lce_sss INTERFACE alx_string_synchronizing_set alx_pred_index)
+target_link_libraries(alx_lce_sss INTERFACE alx_string_synchronizing_set alx_pred_index fmt::fmt-header-only)
 target_link_libraries(alx_lce INTERFACE alx_lce_sss)
 
 add_library(alx_lce_classic INTERFACE)
