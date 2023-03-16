@@ -16,10 +16,12 @@
 
 #include <algorithm>
 #include <filesystem>
+#include <gsaca-double-sort/uint_types.hpp>  // uint40_t
 #include <iostream>
 #include <string>
 #include <tlx/cmdline_parser.hpp>
 #include <vector>
+#include <boost/integer.hpp>
 
 #include "lce/lce_classic.hpp"
 #include "lce/lce_fp.hpp"
@@ -301,6 +303,15 @@ class benchmark {
   }
 };
 
+namespace std {
+template <>
+struct hash<gsaca_lyndon::uint40_t> {
+  auto operator()(const gsaca_lyndon::uint40_t &xyz) const -> size_t {
+    return hash<uint64_t>{}(xyz.u64());
+  }
+};
+}  // namespace std
+
 int main(int argc, char** argv) {
   benchmark b;
 
@@ -353,32 +364,33 @@ int main(int argc, char** argv) {
   b.run<lce_fp<uint8_t, (size_t{1} << 40)>>("fp_unlimited");
   b.run<rklce::lce_rk_prezza>("rk-prezza");
 
-  b.run<lce_sss_naive<uint8_t, 256, uint64_t, false>>("sss_naive256");
-  b.run<lce_sss_naive<uint8_t, 512, uint64_t, false>>("sss_naive512");
-  b.run<lce_sss_naive<uint8_t, 1024, uint64_t, false>>("sss_naive1024");
-  b.run<lce_sss_naive<uint8_t, 2048, uint64_t, false>>("sss_naive2048");
-  b.run<lce_sss_naive<uint8_t, 256, uint64_t, true>>("sss_naive256pl");
-  b.run<lce_sss_naive<uint8_t, 512, uint64_t, true>>("sss_naive512pl");
-  b.run<lce_sss_naive<uint8_t, 1024, uint64_t, true>>("sss_naive1024pl");
-  b.run<lce_sss_naive<uint8_t, 2048, uint64_t, true>>("sss_naive2048pl");
+  using gsaca_lyndon::uint40_t;
+  b.run<lce_sss_naive<uint8_t, 256, uint40_t, false>>("sss_naive256");
+  b.run<lce_sss_naive<uint8_t, 512, uint40_t, false>>("sss_naive512");
+  b.run<lce_sss_naive<uint8_t, 1024, uint40_t, false>>("sss_naive1024");
+  b.run<lce_sss_naive<uint8_t, 2048, uint40_t, false>>("sss_naive2048");
+  b.run<lce_sss_naive<uint8_t, 256, uint40_t, true>>("sss_naive256pl");
+  b.run<lce_sss_naive<uint8_t, 512, uint40_t, true>>("sss_naive512pl");
+  b.run<lce_sss_naive<uint8_t, 1024, uint40_t, true>>("sss_naive1024pl");
+  b.run<lce_sss_naive<uint8_t, 2048, uint40_t, true>>("sss_naive2048pl");
 
-  b.run<lce_sss_noss<uint8_t, 256, uint64_t, false>>("sss_noss256");
-  b.run<lce_sss_noss<uint8_t, 512, uint64_t, false>>("sss_noss512");
-  b.run<lce_sss_noss<uint8_t, 1024, uint64_t, false>>("sss_noss1024");
-  b.run<lce_sss_noss<uint8_t, 2048, uint64_t, false>>("sss_noss2048");
-  b.run<lce_sss_noss<uint8_t, 256, uint64_t, true>>("sss_noss256pl");
-  b.run<lce_sss_noss<uint8_t, 512, uint64_t, true>>("sss_noss512pl");
-  b.run<lce_sss_noss<uint8_t, 1024, uint64_t, true>>("sss_noss1024pl");
-  b.run<lce_sss_noss<uint8_t, 2048, uint64_t, true>>("sss_noss2048pl");
+  b.run<lce_sss_noss<uint8_t, 256, uint40_t, false>>("sss_noss256");
+  b.run<lce_sss_noss<uint8_t, 512, uint40_t, false>>("sss_noss512");
+  b.run<lce_sss_noss<uint8_t, 1024, uint40_t, false>>("sss_noss1024");
+  b.run<lce_sss_noss<uint8_t, 2048, uint40_t, false>>("sss_noss2048");
+  b.run<lce_sss_noss<uint8_t, 256, uint40_t, true>>("sss_noss256pl");
+  b.run<lce_sss_noss<uint8_t, 512, uint40_t, true>>("sss_noss512pl");
+  b.run<lce_sss_noss<uint8_t, 1024, uint40_t, true>>("sss_noss1024pl");
+  b.run<lce_sss_noss<uint8_t, 2048, uint40_t, true>>("sss_noss2048pl");
 
-  b.run<lce_sss<uint8_t, 256, uint64_t, false>>("sss256");
-  b.run<lce_sss<uint8_t, 512, uint64_t, false>>("sss512");
-  b.run<lce_sss<uint8_t, 1024, uint64_t, false>>("sss1024");
-  b.run<lce_sss<uint8_t, 2048, uint64_t, false>>("sss2048");
-  b.run<lce_sss<uint8_t, 256, uint64_t, true>>("sss256pl");
-  b.run<lce_sss<uint8_t, 512, uint64_t, true>>("sss512pl");
-  b.run<lce_sss<uint8_t, 1024, uint64_t, true>>("sss1024pl");
-  b.run<lce_sss<uint8_t, 2048, uint64_t, true>>("sss2048pl");
+  b.run<lce_sss<uint8_t, 256, uint40_t, false>>("sss256");
+  b.run<lce_sss<uint8_t, 512, uint40_t, false>>("sss512");
+  b.run<lce_sss<uint8_t, 1024, uint40_t, false>>("sss1024");
+  b.run<lce_sss<uint8_t, 2048, uint40_t, false>>("sss2048");
+  b.run<lce_sss<uint8_t, 256, uint40_t, true>>("sss256pl");
+  b.run<lce_sss<uint8_t, 512, uint40_t, true>>("sss512pl");
+  b.run<lce_sss<uint8_t, 1024, uint40_t, true>>("sss1024pl");
+  b.run<lce_sss<uint8_t, 2048, uint40_t, true>>("sss2048pl");
 
-  // b.run<lce_classic<uint8_t, uint64_t>>("classic");
+  // b.run<lce_classic<uint8_t, uint40_t>>("classic");
 }

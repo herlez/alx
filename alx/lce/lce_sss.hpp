@@ -29,8 +29,6 @@
 #endif
 #endif
 
-#include <gsaca-double-sort/uint_types.hpp>  // uint40_t
-
 namespace alx::lce {
 
 template <typename t_char_type = uint8_t, uint64_t t_tau = 1024,
@@ -72,9 +70,8 @@ class lce_sss {
     malloc_count_reset_peak();
 #endif
 #endif
-    m_pred =
-        alx::pred::pred_index<t_index_type, std::bit_width(t_tau) - 1,
-                              gsaca_lyndon::uint40_t>(m_sync_set.get_sss());
+    m_pred = alx::pred::pred_index<t_index_type, std::bit_width(t_tau) - 1,
+                                   t_index_type>(m_sync_set.get_sss());
 
 #ifdef ALX_BENCHMARK_INTERNAL
     fmt::print(" pred_construct_time={}", t.get_and_reset());
@@ -164,7 +161,8 @@ class lce_sss {
       l_ = l_res.pos;
       r_ = r_res.pos;
       if (l_res.exists && r_res.exists && (sss[l_] - l == sss[r_] - r)) {
-        lce_local_max = std::min(lce_local_max, sss[l_] - l);
+        lce_local_max =
+            std::min(lce_local_max, static_cast<size_t>(sss[l_] - l));
       }
 
       size_t lce_local = alx::lce::lce_naive_wordwise<t_char_type>::lce_lr(
@@ -238,8 +236,7 @@ class lce_sss {
   char_type const* m_text;
   size_t m_size;
 
-  alx::pred::pred_index<t_index_type, std::bit_width(t_tau) - 1,
-                        gsaca_lyndon::uint40_t>
+  alx::pred::pred_index<t_index_type, std::bit_width(t_tau) - 1, t_index_type>
       m_pred;
   rolling_hash::sss<t_index_type, t_tau> m_sync_set;
   alx::lce::lce_classic_for_sss<t_index_type, t_tau> m_fp_lce;
