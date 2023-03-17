@@ -15,7 +15,7 @@
 #include <gsaca-double-sort-par.hpp>
 
 #include "lce/lce_naive_wordwise.hpp"
-#include "rmq/rmq_nlgn.hpp"
+#include "rmq/rmq_n.hpp"
 
 #ifdef ALX_BENCHMARK_INTERNAL
 #include <fmt/core.h>
@@ -98,7 +98,7 @@ class lce_classic {
       }
     }
     // built rmq
-    m_rmq = alx::rmq::rmq_nlgn<t_index_type>(m_lcp);
+    m_rmq = alx::rmq::rmq_n<t_index_type>(m_lcp);
   }
 
   template <typename C>
@@ -158,7 +158,7 @@ class lce_classic {
 
   char_type const* m_text;
   size_t m_size;
-  alx::rmq::rmq_nlgn<t_index_type> m_rmq;
+  alx::rmq::rmq_n<t_index_type> m_rmq;
 };
 
 }  // namespace alx::lce

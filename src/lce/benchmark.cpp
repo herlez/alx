@@ -42,13 +42,12 @@ std::vector<std::string> algorithms{"naive",
                                     "naive_std",
                                     "naive_wordwise",
                                     "naive_wordwise_xor",
-                                    "rk-prezza",
-                                    "fp1",
                                     "fp64",
                                     "fp128",
                                     "fp256",
                                     "fp512",
                                     "fp_unlimited",
+                                    "rk-prezza",
                                     "sss_naive256",
                                     "sss_naive512",
                                     "sss_naive1024",
@@ -79,10 +78,10 @@ std::vector<std::string> algorithm_sets{"all", "seq", "par", "main"};
 std::vector<std::string> algorithms_seq{"naive", "naive_std", "naive_wordwise",
                                         "naive_wordwise_xor"};
 std::vector<std::string> algorithms_par{
-    "fp16",
-    "fp32",
     "fp64",
     "fp128",
+    "fp256",
+    "fp512",
     "sss_naive256",
     "sss_naive512",
     "sss_naive1024",
@@ -356,7 +355,6 @@ int main(int argc, char** argv) {
   b.run<lce_naive_wordwise<>>("naive_wordwise");
   b.run<lce_naive_wordwise_xor<>>("naive_wordwise_xor");
 
-  b.run<lce_fp<uint8_t, 1>>("fp1");
   b.run<lce_fp<uint8_t, 64>>("fp64");
   b.run<lce_fp<uint8_t, 128>>("fp128");
   b.run<lce_fp<uint8_t, 256>>("fp256");
