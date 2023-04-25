@@ -403,7 +403,7 @@ class sss {
     return m_fps;
   }
   void free_fps() {
-    m_fps.clear();
+    m_fps = std::vector<uint128_t>{};
     m_fps_calculated = false;
   }
 
