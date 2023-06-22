@@ -1,7 +1,7 @@
 /*******************************************************************************
- * src/lce/benchmark.cpp
+ * alx/lce/benchmark.cpp
  *
- * Copyright (C) 2022 Alexander Herlez <alexander.herlez@tu-dortmund.de>
+ * Copyright (C) 2023 Alexander Herlez <alexander.herlez@tu-dortmund.de>
  *
  * All rights reserved. Published under the BSD-2 license in the LICENSE file.
  ******************************************************************************/
@@ -15,14 +15,17 @@
 #include <omp.h>
 
 #include <algorithm>
+#include <boost/integer.hpp>
 #include <filesystem>
 #include <gsaca-double-sort/uint_types.hpp>  // uint40_t
 #include <iostream>
 #include <string>
 #include <tlx/cmdline_parser.hpp>
 #include <vector>
-#include <boost/integer.hpp>
 
+#ifdef ALX_BUILD_LCE_SDSL
+#include "lce/lce_sdsl_cst.hpp"
+#endif
 #include "lce/lce_classic.hpp"
 #include "lce/lce_fp.hpp"
 #include "lce/lce_naive.hpp"
@@ -72,40 +75,20 @@ std::vector<std::string> algorithms{"naive",
                                     "sss512pl",
                                     "sss1024pl",
                                     "sss2048pl",
-                                    "classic"};
+                                    "classic",
+                                    "sdsl_cst"};
 std::vector<std::string> algorithm_sets{"all", "seq", "par", "main"};
 
 std::vector<std::string> algorithms_seq{"naive", "naive_std", "naive_wordwise",
                                         "naive_wordwise_xor"};
 std::vector<std::string> algorithms_par{
-    "fp64",
-    "fp128",
-    "fp256",
-    "fp512",
-    "sss_naive256",
-    "sss_naive512",
-    "sss_naive1024",
-    "sss_naive2048",
-    "sss_naive256pl",
-    "sss_naive512pl",
-    "sss_naive1024pl",
-    "sss_naive2048pl",
-    "sss_noss256",
-    "sss_noss512",
-    "sss_noss1024",
-    "sss_noss2048",
-    "sss_noss256pl",
-    "sss_noss512pl",
-    "sss_noss1024pl",
-    "sss_noss2048pl",
-    "sss256",
-    "sss512",
-    "sss1024",
-    "sss2048",
-    "sss256pl",
-    "sss512pl",
-    "sss1024pl",
-    "sss2048pl",
+    "fp64",           "fp128",          "fp256",           "fp512",
+    "sss_naive256",   "sss_naive512",   "sss_naive1024",   "sss_naive2048",
+    "sss_naive256pl", "sss_naive512pl", "sss_naive1024pl", "sss_naive2048pl",
+    "sss_noss256",    "sss_noss512",    "sss_noss1024",    "sss_noss2048",
+    "sss_noss256pl",  "sss_noss512pl",  "sss_noss1024pl",  "sss_noss2048pl",
+    "sss256",         "sss512",         "sss1024",         "sss2048",
+    "sss256pl",       "sss512pl",       "sss1024pl",       "sss2048pl",
 };
 
 std::vector<std::string> algorithms_main{
@@ -209,7 +192,7 @@ class benchmark {
         queries[i] = queries[i % num_unique_queries];
       }
 
-      size_t wanted_bucket_size = 1000;
+      /*size_t wanted_bucket_size = 1000;
       size_t bucket_range = (text.size() / queries.size() * wanted_bucket_size);
 
       size_t num_buckets = (text.size() / bucket_range) + 1;
@@ -233,6 +216,7 @@ class benchmark {
                         expected_bucket_size / expected_bucket_size);
       fmt::print(" q_chi2={}", chi_square);
       fmt::print(" q_chi2/max={}", chi_square / max_chi);
+      */
     }
     assert(queries.size() == 0 || queries.size() == num_queries * 2);
     // fmt::print(" q_path={}", cur_query_path.string());
@@ -283,7 +267,12 @@ class benchmark {
     // Benchmark construction
     fmt::print("RESULT algo={}", algo_name);
 
-    load_text();
+    if (algo_name == "sdsl_cst") {
+      std::string text_path_string = text_path.string();
+      text = std::vector<uint8_t>(text_path_string.begin(), text_path_string.end());
+    } else {
+      load_text();
+    }
 
     lce_ds_type lce_ds = benchmark_construction<lce_ds_type>();
     fmt::print("\n");
@@ -305,7 +294,7 @@ class benchmark {
 namespace std {
 template <>
 struct hash<gsaca_lyndon::uint40_t> {
-  auto operator()(const gsaca_lyndon::uint40_t &xyz) const -> size_t {
+  auto operator()(const gsaca_lyndon::uint40_t& xyz) const -> size_t {
     return hash<uint64_t>{}(xyz.u64());
   }
 };
@@ -390,5 +379,8 @@ int main(int argc, char** argv) {
   b.run<lce_sss<uint8_t, 1024, uint40_t, true>>("sss1024pl");
   b.run<lce_sss<uint8_t, 2048, uint40_t, true>>("sss2048pl");
 
-  // b.run<lce_classic<uint8_t, uint40_t>>("classic");
+  b.run<lce_classic<uint8_t, uint40_t>>("classic");
+  #ifdef ALX_BUILD_LCE_SDSL
+    b.run<lce_sdsl_cst>("sdsl_cst");
+  #endif
 }

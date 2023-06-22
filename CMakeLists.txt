@@ -33,6 +33,7 @@ if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
 endif()
 
 
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/extlib")
 add_subdirectory(alx)
 add_subdirectory(extlib)
 add_subdirectory(tests)
