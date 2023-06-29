@@ -270,6 +270,8 @@ class benchmark {
     if (algo_name == "sdsl_cst") {
       std::string text_path_string = text_path.string();
       text = std::vector<uint8_t>(text_path_string.begin(), text_path_string.end());
+      fmt::print(" text={}", text_path.filename().string());
+      fmt::print(" text_size={}", std::filesystem::file_size(text_path));
     } else {
       load_text();
     }
