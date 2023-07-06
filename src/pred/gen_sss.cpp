@@ -9,12 +9,22 @@
 #include <fmt/core.h>
 #include <fmt/ranges.h>
 
+#include <gsaca-double-sort/uint_types.hpp>  // uint40_t
 #include <tlx/cmdline_parser.hpp>
 
 #include "rolling_hash/string_synchronizing_set.hpp"
 #include "util/io.hpp"
 
 namespace fs = std::filesystem;
+
+namespace std {
+template <>
+struct hash<gsaca_lyndon::uint40_t> {
+  auto operator()(const gsaca_lyndon::uint40_t& xyz) const -> size_t {
+    return hash<uint64_t>{}(xyz.u64());
+  }
+};
+}  // namespace std
 
 int main(int argc, char** argv) {
   std::vector<std::string> algorithms{"all", "sss256", "sss512", "sss1024",
@@ -55,26 +65,27 @@ int main(int argc, char** argv) {
   }
 
   text = alx::util::load_vector<uint8_t>(text_path);
+  using gsaca_lyndon::uint40_t;
 
   std::filesystem::path output_path = text_path;
   if (algorithm == "sss256" || algorithm == "all") {
     output_path += ".sss256";
-    alx::rolling_hash::sss<uint64_t, 256> sss(text);
+    alx::rolling_hash::sss<uint40_t, 256> sss(text);
     alx::util::write_vector(output_path, sss.get_sss());
   }
   if (algorithm == "sss512" || algorithm == "all") {
     output_path += ".sss512";
-    alx::rolling_hash::sss<uint64_t, 512> sss(text);
+    alx::rolling_hash::sss<uint40_t, 512> sss(text);
     alx::util::write_vector(output_path, sss.get_sss());
   }
   if (algorithm == "sss1024" || algorithm == "all") {
     output_path += ".sss1024";
-    alx::rolling_hash::sss<uint64_t, 1024> sss(text);
+    alx::rolling_hash::sss<uint40_t, 1024> sss(text);
     alx::util::write_vector(output_path, sss.get_sss());
   }
   if (algorithm == "sss2048" || algorithm == "all") {
     output_path += ".sss2048";
-    alx::rolling_hash::sss<uint64_t, 2048> sss(text);
+    alx::rolling_hash::sss<uint40_t, 2048> sss(text);
     alx::util::write_vector(output_path, sss.get_sss());
   }
   return 0;

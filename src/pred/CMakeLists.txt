@@ -10,4 +10,4 @@ if(${ALX_BENCHMARK_INTERNAL})
 endif()
 
 add_executable(gen_sss gen_sss.cpp)
-target_link_libraries(gen_sss PRIVATE tlx_clp alx_string_synchronizing_set fmt::fmt-header-only alx_util)
+target_link_libraries(gen_sss PRIVATE tlx_clp alx_string_synchronizing_set fmt::fmt-header-only alx_util gsaca_ds)
