@@ -68,23 +68,24 @@ int main(int argc, char** argv) {
   using gsaca_lyndon::uint40_t;
 
   std::filesystem::path output_path = text_path;
+  output_path += ".sss";
   if (algorithm == "sss256" || algorithm == "all") {
-    output_path += ".sss256";
+    output_path.replace_extension("sss256");
     alx::rolling_hash::sss<uint40_t, 256> sss(text);
     alx::util::write_vector(output_path, sss.get_sss());
   }
   if (algorithm == "sss512" || algorithm == "all") {
-    output_path += ".sss512";
+    output_path.replace_extension("sss512");
     alx::rolling_hash::sss<uint40_t, 512> sss(text);
     alx::util::write_vector(output_path, sss.get_sss());
   }
   if (algorithm == "sss1024" || algorithm == "all") {
-    output_path += ".sss1024";
+    output_path.replace_extension(".sss1024");
     alx::rolling_hash::sss<uint40_t, 1024> sss(text);
     alx::util::write_vector(output_path, sss.get_sss());
   }
   if (algorithm == "sss2048" || algorithm == "all") {
-    output_path += ".sss2048";
+    output_path.replace_extension(".sss2048");
     alx::rolling_hash::sss<uint40_t, 2048> sss(text);
     alx::util::write_vector(output_path, sss.get_sss());
   }
