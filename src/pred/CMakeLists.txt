@@ -1,5 +1,5 @@
 add_executable(benchmark_pred benchmark.cpp)
-target_link_libraries(benchmark_pred PRIVATE alx_pred tlx_clp fmt::fmt-header-only alx_util)
+target_link_libraries(benchmark_pred PRIVATE alx_pred tlx_clp fmt::fmt-header-only alx_util gsaca_ds)
 
 if(${ALX_BENCHMARK_SPACE})
   target_compile_definitions(benchmark_pred PRIVATE -DALX_BENCHMARK_SPACE)

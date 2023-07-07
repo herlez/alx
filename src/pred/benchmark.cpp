@@ -18,6 +18,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <gsaca-double-sort/uint_types.hpp>  // uint40_t
 #include <iostream>
 #include <iterator>
 #include <random>
@@ -69,7 +70,9 @@ class benchmark {
 
   void load_data() {
     alx::util::timer t;
-    data = alx::util::load_vector<t_data_type>(data_path);
+    std::vector<gsaca_lyndon::uint40_t> data_5byte =
+        alx::util::load_vector<gsaca_lyndon::uint40_t>(data_path);
+    data = std::vector<uint64_t>(data_5byte.begin(), data_5byte.end());
     assert(data.size() != 0);
     fmt::print(" data={}", data_path.filename().string());
     fmt::print(" data_size={}", data.size());
@@ -176,6 +179,17 @@ int main(int argc, char** argv) {
 
   b.run<alx::pred::binsearch_std<uint64_t>>("binsearch_std");
   b.run<alx::pred::j_index<uint64_t>>("j_index");
-  b.run<alx::pred::pred_index<uint64_t, 7, uint32_t>>("pred_index");
-  b.run<alx::pred::pgm_index<uint64_t, 32>>("pgm_index");
+  b.run<alx::pred::pred_index<uint64_t, 6, uint32_t>>("pred_index6");
+  b.run<alx::pred::pred_index<uint64_t, 7, uint32_t>>("pred_index7");
+  b.run<alx::pred::pred_index<uint64_t, 8, uint32_t>>("pred_index8");
+  b.run<alx::pred::pred_index<uint64_t, 9, uint32_t>>("pred_index9");
+  b.run<alx::pred::pred_index<uint64_t, 10, uint32_t>>("pred_index10");
+  b.run<alx::pred::pred_index<uint64_t, 11, uint32_t>>("pred_index11");
+  b.run<alx::pred::pred_index<uint64_t, 12, uint32_t>>("pred_index12");
+
+  b.run<alx::pred::pgm_index<uint64_t, 8>>("pgm_index8");
+  b.run<alx::pred::pgm_index<uint64_t, 16>>("pgm_index16");
+  b.run<alx::pred::pgm_index<uint64_t, 32>>("pgm_index32");
+  b.run<alx::pred::pgm_index<uint64_t, 64>>("pgm_index64");
+  b.run<alx::pred::pgm_index<uint64_t, 128>>("pgm_index128");
 }
