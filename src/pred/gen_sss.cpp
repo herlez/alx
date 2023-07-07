@@ -32,6 +32,7 @@ int main(int argc, char** argv) {
 
   std::filesystem::path text_path;
   std::vector<uint8_t> text;
+  std::filesystem::path output_path;
   std::string algorithm{"sss512"};
 
   tlx::CmdlineParser cp;
@@ -45,6 +46,7 @@ int main(int argc, char** argv) {
       'a', "algorithm", algorithm,
       fmt::format("Name of data structure which is benchmarked. Options: {}",
                   algorithms));
+  cp.add_path('o', "output_folder", output_path, "The output folder.");
   if (!cp.process(argc, argv)) {
     std::exit(EXIT_FAILURE);
   }
@@ -62,13 +64,24 @@ int main(int argc, char** argv) {
                  algorithms);
       return -1;
     }
+    if(!output_path.empty() && !fs::is_directory(output_path)) {
+      fmt::print("Folder {} does not exist.\n",
+                 output_path.string());
+      return -1;
+    }
   }
 
   text = alx::util::load_vector<uint8_t>(text_path);
   using gsaca_lyndon::uint40_t;
 
-  std::filesystem::path output_path = text_path;
-  output_path += ".sss";
+  if(output_path == "") {
+    output_path = text_path;
+    output_path += ".sss";
+  } else {
+    output_path /= text_path.filename();
+    output_path += ".sss";
+  }
+  
   if (algorithm == "sss256" || algorithm == "all") {
     output_path.replace_extension("sss256");
     alx::rolling_hash::sss<uint40_t, 256> sss(text);
